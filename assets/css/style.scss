@@ -554,3 +554,27 @@ body {
   font-size: 14px;
 }
 .share-kakao:hover { background: #F0D900; }
+.post-thumbnail {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px 8px 0 0;
+  display: block;
+}
+.post-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px 8px 0 0;
+}
+.post-page img {
+  width: 100%;
+  max-height: 500px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+@media (max-width: 640px) {
+  .post-thumbnail, .post-card img { height: 160px; }
+  .post-page img { max-height: 280px; }
+}
