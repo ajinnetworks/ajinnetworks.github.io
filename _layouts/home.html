@@ -1,0 +1,97 @@
+---
+layout: default
+---
+
+<!-- 읽기 진행 바 -->
+<div id="reading-progress"></div>
+
+<!-- 상단으로 버튼 -->
+<button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- 히어로 -->
+<div class="home-hero">
+  <h1 class="hero-title">⚙️ 아진네트웍스 기술 블로그</h1>
+  <p class="hero-subtitle">공장 자동화 · 딥러닝 비전 · 스마트팩토리 최신 기술 인사이트</p>
+  <a href="https://www.ajinnetworks.co.kr" class="hero-btn" target="_blank">회사 홈페이지 →</a>
+</div>
+
+<!-- 통합 검색 + 카테고리 바 -->
+<div class="unified-filter-bar">
+  <div class="unified-filter-inner">
+    <input type="text" id="search-input" class="unified-search" placeholder="🔍 포스트 검색..." oninput="applyFilters()">
+    <div class="cat-filters">
+      <a href="#all" class="cat-badge active" onclick="setCat('all', this); return false;">전체</a>
+      {% assign all_cats = site.posts | map: "categories" | join: "," | split: "," | uniq | sort %}
+      {% for cat in all_cats %}
+        {% assign cat_clean = cat | strip %}
+        {% if cat_clean != "" %}
+          <a href="#{{ cat_clean }}" class="cat-badge" onclick="setCat('{{ cat_clean }}', this); return false;">{{ cat_clean }}</a>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- 포스트 그리드 -->
+{% if site.posts.size == 0 %}
+  <div class="empty-state">
+    <p>🚀 곧 첫 포스트가 발행됩니다!</p>
+  </div>
+{% else %}
+  <div class="post-grid" id="post-grid">
+    {% for post in site.posts %}
+      <article class="post-card"
+               data-post-title="{{ post.title }}"
+               data-post-url="{{ post.url | relative_url }}"
+               data-post-desc="{{ post.description }}"
+               data-cats="{{ post.categories | join: ',' }}">
+        <div class="post-card-meta">
+          <span class="post-date">📅 {{ post.date | date: "%Y년 %m월 %d일" }}</span>
+          {% if post.categories.size > 0 %}
+            <span class="post-category">{{ post.categories | first }}</span>
+          {% endif %}
+          <span class="reading-time-small">⏱️ 약 {{ post.content | number_of_words | divided_by: 200 | plus: 1 }}분</span>
+        </div>
+        <h2 class="post-card-title">
+          <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+        </h2>
+        {% if post.description %}
+          <p class="post-card-desc">{{ post.description }}</p>
+        {% elsif post.excerpt %}
+          <p class="post-card-desc">{{ post.excerpt | strip_html | truncate: 120 }}</p>
+        {% endif %}
+        {% if post.tags.size > 0 %}
+          <div class="post-card-tags">
+            {% for tag in post.tags limit:4 %}
+              <span class="tag">#{{ tag }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+        <a href="{{ post.url | relative_url }}" class="read-more">더 읽기 →</a>
+      </article>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<script>
+var currentCat = 'all';
+
+function setCat(cat, el) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-badge').forEach(function(b) { b.classList.remove('active'); });
+  el.classList.add('active');
+  applyFilters();
+}
+
+function applyFilters() {
+  var q = (document.getElementById('search-input').value || '').toLowerCase();
+  document.querySelectorAll('.post-card').forEach(function(card) {
+    var title = (card.dataset.postTitle || '').toLowerCase();
+    var desc = (card.dataset.postDesc || '').toLowerCase();
+    var cats = (card.dataset.cats || '').split(',').map(function(c){ return c.trim(); });
+    var matchCat = currentCat === 'all' || cats.includes(currentCat);
+    var matchSearch = !q || title.includes(q) || desc.includes(q);
+    card.style.display = (matchCat && matchSearch) ? '' : 'none';
+  });
+}
+</script>

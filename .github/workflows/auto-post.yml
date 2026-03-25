@@ -1,0 +1,72 @@
+name: Auto Blog Post (주 3회 자동 발행)
+
+on:
+  # 매주 화·목·토 한국시간 09:00 (UTC 00:00)
+  schedule:
+    - cron: '0 0 * * 2'   # 화요일
+    - cron: '0 0 * * 4'   # 목요일
+    - cron: '0 0 * * 6'   # 토요일
+
+  # 수동 실행 허용
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: '실행 모드'
+        required: true
+        default: 'once'
+        type: choice
+        options:
+          - once        # 실제 발행
+          - dry-run     # 초안만 생성
+
+jobs:
+  auto-post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Python 3.11 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 의존성 설치
+        run: |
+          pip install \
+            anthropic \
+            PyGithub \
+            python-frontmatter \
+            requests \
+            pyyaml \
+            python-dotenv \
+            schedule
+
+      - name: .env 파일 생성
+        run: |
+          cat > .env << EOF
+          ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN=${{ secrets.BLOG_GITHUB_TOKEN }}
+          GITHUB_REPO=ajinnetworks/ajinnetworks.github.io
+          GITHUB_BRANCH=main
+          GITHUB_POSTS_PATH=_posts
+          HUMAN_GATE=false
+          LOG_LEVEL=INFO
+          EOF
+
+      - name: 블로그 포스트 자동 생성 및 발행
+        run: |
+          MODE="${{ github.event.inputs.mode || 'once' }}"
+          echo "실행 모드: $MODE"
+          python scripts/run_agent.py --mode $MODE --platform github
+
+      - name: 실행 로그 업로드
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blog-logs-${{ github.run_number }}
+          path: output/logs/
+          retention-days: 30

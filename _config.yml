@@ -1,0 +1,77 @@
+# ================================================================
+# 아진네트웍스 주식회사 — 기술 블로그 Jekyll 설정
+# ================================================================
+
+title: "아진네트웍스 기술 블로그"
+description: "공장 자동화 · 딥러닝 비전 · 스마트팩토리 기술 인사이트"
+url: "https://ajinnetworks.github.io"
+baseurl: ""
+company_url: "https://www.ajinnetworks.co.kr"
+
+author: "아진네트웍스 주식회사"
+email: ""
+
+# ── 테마 & 커스텀 CSS ─────────────────────────────
+theme: minima
+
+minima:
+  skin: classic
+
+# 커스텀 CSS 적용
+sass:
+  sass_dir: assets/css
+  style: compressed
+
+# ── 플러그인 ──────────────────────────────────────
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+# ── 카테고리 설정 ─────────────────────────────────
+defaults:
+  - scope:
+      path: ""
+      type: "posts"
+    values:
+      layout: "post"
+      author: "아진네트웍스 주식회사"
+
+# ── 포스트 설정 ───────────────────────────────────
+permalink: /:year/:month/:day/:title/
+show_excerpts: true
+excerpt_separator: "<!--more-->"
+
+# ── 마크다운 ──────────────────────────────────────
+markdown: kramdown
+highlighter: rouge
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+# ── SEO ───────────────────────────────────────────
+lang: ko
+timezone: Asia/Seoul
+
+# ── 네비게이션 ────────────────────────────────────
+header_pages:
+  - about.md
+
+# ── 빌드 제외 ─────────────────────────────────────
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - .env
+  - "*.py"
+  - requirements.txt
+  - vendor/
+  - agents/
+  - scripts/
+  - config/
+  - prompts/
+  - output/
+  - tests/
+
+feed:
+  posts_limit: 20

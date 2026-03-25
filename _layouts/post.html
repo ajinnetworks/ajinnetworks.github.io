@@ -1,0 +1,62 @@
+---
+layout: default
+---
+
+<article class="post-wrap">
+
+  <!-- 포스트 헤더 -->
+  <header class="post-hero">
+    <div class="post-hero-inner">
+      {% if page.categories %}
+        <div class="post-cats">
+          {% for cat in page.categories %}
+            <span class="post-cat-badge">{{ cat }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+      <h1 class="post-big-title">{{ page.title }}</h1>
+      <div class="post-byline">
+        <span>📅 {{ page.date | date: "%Y년 %m월 %d일" }}</span>
+        <span>✍️ 아진네트웍스 주식회사</span>
+        {% if page.tags %}
+          <span>🏷️ {{ page.tags | join: ", " }}</span>
+        {% endif %}
+      </div>
+      {% if page.description %}
+        <p class="post-lead">{{ page.description }}</p>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- 포스트 본문 -->
+  <div class="post-body-wrap">
+    <div class="post-body">
+      {{ content }}
+    </div>
+
+    <!-- 태그 섹션 -->
+    {% if page.tags %}
+      <div class="post-tags-section">
+        <strong>태그:</strong>
+        {% for tag in page.tags %}
+          <span class="post-tag-item">#{{ tag }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- 회사 CTA -->
+    <div class="post-cta">
+      <div class="cta-inner">
+        <h3>⚙️ 아진네트웍스 주식회사</h3>
+        <p>공장 자동화 · 딥러닝 비전 검사 · 스마트팩토리 전문 기업</p>
+        <a href="https://www.ajinnetworks.co.kr" target="_blank" class="cta-btn">회사 홈페이지 방문 →</a>
+      </div>
+    </div>
+
+    <!-- 목록으로 돌아가기 -->
+    <div class="post-nav">
+      <a href="{{ '/' | relative_url }}" class="back-btn">← 목록으로 돌아가기</a>
+    </div>
+  </div>
+
+</article>
