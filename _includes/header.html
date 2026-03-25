@@ -11,18 +11,40 @@
     <!-- 중앙: 네비게이션 -->
     <nav class="nav-links">
       <a href="{{ '/' | relative_url }}">홈</a>
-      <a href="{{ '/' | relative_url }}#categories" onclick="document.querySelector('.unified-filter-bar')?.scrollIntoView({behavior:'smooth'}); return false;">카테고리</a>
+      <a href="{{ '/' | relative_url }}#categories"
+         onclick="document.querySelector('.unified-filter-bar')?.scrollIntoView({behavior:'smooth'}); return false;">카테고리</a>
       <a href="https://www.ajinnetworks.co.kr" target="_blank" rel="noopener">회사홈페이지</a>
     </nav>
 
-    <!-- 우측: 검색 아이콘 -->
-    <button class="nav-search-btn"
-            aria-label="검색"
-            onclick="
-              var el = document.getElementById('search-input');
-              if (el) { el.focus(); el.scrollIntoView({behavior:'smooth', block:'center'}); }
-            ">
-      🔍
-    </button>
+    <!-- 우측: 검색 + 햄버거 -->
+    <div class="nav-right">
+      <button class="nav-search-btn"
+              aria-label="검색"
+              onclick="
+                var el = document.getElementById('search-input');
+                if (el) { el.focus(); el.scrollIntoView({behavior:'smooth', block:'center'}); }
+              ">🔍</button>
+      <button class="nav-hamburger" aria-label="메뉴" onclick="toggleMobileMenu()">☰</button>
+    </div>
   </div>
 </header>
+
+<script>
+function toggleMobileMenu() {
+  var nav = document.querySelector('.nav-links');
+  var btn = document.querySelector('.nav-hamburger');
+  var isOpen = nav.classList.toggle('open');
+  btn.textContent = isOpen ? '×' : '☰';
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.site-header')) {
+    var nav = document.querySelector('.nav-links');
+    var btn = document.querySelector('.nav-hamburger');
+    if (nav && nav.classList.contains('open')) {
+      nav.classList.remove('open');
+      btn.textContent = '☰';
+    }
+  }
+});
+</script>

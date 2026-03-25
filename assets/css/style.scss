@@ -35,6 +35,7 @@ body {
 .site-header {
   background: #0a0e1a;
   border-bottom: 1px solid rgba(255,255,255,0.08);
+  position: -webkit-sticky;
   position: sticky;
   top: 0;
   z-index: 200;
@@ -96,8 +97,46 @@ body {
   color: #fff;
   background: rgba(255,255,255,0.1);
 }
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.nav-hamburger {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(255,255,255,0.75);
+  font-size: 22px;
+  padding: 6px 10px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  line-height: 1;
+}
+.nav-hamburger:hover { color: #fff; background: rgba(255,255,255,0.1); }
+
 @media (max-width: 640px) {
-  .nav-links { display: none; }
+  .nav-hamburger { display: flex; align-items: center; justify-content: center; }
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 64px;
+    left: 0;
+    right: 0;
+    background: #0a0e1a;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    flex-direction: column;
+    padding: 8px 0;
+    z-index: 199;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .nav-links.open { display: flex; }
+  .nav-links a {
+    padding: 12px 24px;
+    border-radius: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
 }
 
 /* ── 메인 래퍼 ── */
