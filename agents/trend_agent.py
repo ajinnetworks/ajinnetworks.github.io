@@ -9,7 +9,7 @@ import os
 from datetime import datetime
 from typing import Optional
 
-import anthropic
+from google import genai
 import requests
 import yaml
 
@@ -92,16 +92,16 @@ def fetch_reddit_kr_trends() -> list[dict]:
         return []
 
 
-def select_topics_via_claude(
+def select_topics_via_gemini(
     raw_trends: list[dict],
     blog_domain: str,
     top_n: int = 3,
 ) -> list[dict]:
     """
-    Claude API를 통해 수집된 트렌드 중 블로그 도메인에 적합한 주제 top_n개 선정.
+    Gemini API를 통해 수집된 트렌드 중 블로그 도메인에 적합한 주제 top_n개 선정.
     Manager AI 역할: 전략적 주제 선정.
     """
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
     trends_text = "\n".join(
         [f"- [{t['source']}] {t['keyword']}" for t in raw_trends[:50]]
@@ -130,20 +130,18 @@ def select_topics_via_claude(
 }}
 """
 
-    message = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=1000,
-        messages=[{"role": "user", "content": prompt}],
+    response = client.models.generate_content(
+        model="gemini-flash-latest",
+        contents=prompt,
     )
-
-    raw = message.content[0].text.strip()
+    raw = response.text.strip()
     # JSON 펜스 제거
     if raw.startswith("```"):
         raw = raw.split("```")[1]
         if raw.startswith("json"):
             raw = raw[4:]
     result = json.loads(raw.strip())
-    logger.info(f"Claude가 {len(result['selected_topics'])}개 주제 선정 완료")
+    logger.info(f"Gemini가 {len(result['selected_topics'])}개 주제 선정 완료")
     return result["selected_topics"]
 
 
@@ -174,7 +172,7 @@ def run_trend_agent(blog_domain: Optional[str] = None) -> list[dict]:
 
     logger.info(f"총 {len(all_trends)}개 트렌드 키워드 수집됨")
 
-    selected = select_topics_via_claude(
+    selected = select_topics_via_gemini(
         raw_trends=all_trends,
         blog_domain=domain,
         top_n=config["trend"]["top_select"],
