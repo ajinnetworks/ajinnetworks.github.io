@@ -9,7 +9,7 @@ import logging
 import os
 from pathlib import Path
 
-import anthropic
+from google import genai
 import yaml
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ def review_post(post: dict) -> dict:
     Returns: review_result dict { total_score, breakdown, issues, pass, revision_notes }
     """
     config = load_config()
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
     system_prompt = load_reviewer_prompt()
     min_score = config["reviewer"]["min_score"]
 
@@ -46,7 +46,8 @@ def review_post(post: dict) -> dict:
     else:
         content_str = str(content_raw)
 
-    user_prompt = f"""
+    user_prompt = f"""{system_prompt}
+
 아래 블로그 포스트를 검수하세요.
 
 제목: {post.get('title', '')}
@@ -60,14 +61,11 @@ SEO 키워드: {post.get('seo_keywords', [])}
 JSON만 반환:
 """
 
-    message = client.messages.create(
+    response = client.models.generate_content(
         model=config["agent"]["model"],
-        max_tokens=800,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_prompt}],
+        contents=user_prompt,
     )
-
-    raw = message.content[0].text.strip()
+    raw = response.text.strip()
     if "```" in raw:
         parts = raw.split("```")
         for part in parts:
@@ -109,7 +107,7 @@ def revise_post(post: dict, review: dict) -> dict:
     최대 2회 재시도 (무한 루프 방지).
     """
     config = load_config()
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
     issues_text = "\n".join(
         [f"- [{i['severity']}] {i['description']}"
@@ -129,13 +127,11 @@ def revise_post(post: dict, review: dict) -> dict:
 개선된 포스트를 동일한 JSON 형식으로 반환:
 """
 
-    message = client.messages.create(
+    response = client.models.generate_content(
         model=config["agent"]["model"],
-        max_tokens=config["agent"]["max_tokens"],
-        messages=[{"role": "user", "content": prompt}],
+        contents=prompt,
     )
-
-    raw = message.content[0].text.strip()
+    raw = response.text.strip()
     if "```" in raw:
         parts = raw.split("```")
         for part in parts:
