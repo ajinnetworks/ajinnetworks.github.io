@@ -10,7 +10,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-from google import genai
+import google.generativeai as genai
 import yaml
 
 logger = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ def load_writer_prompt() -> str:
 
 def generate_post(topic: dict) -> dict:
     config = load_config()
-    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
     system_prompt = load_writer_prompt()
 
     pre_category = classify_category(topic["keyword"], topic.get("angle", ""))
@@ -107,10 +107,8 @@ def generate_post(topic: dict) -> dict:
 
     logger.info(f"Writer Agent: '{topic['keyword']}' 작성 시작 (예상 카테고리: {pre_category})")
 
-    response = client.models.generate_content(
-        model=config["agent"]["model"],
-        contents=user_prompt,
-    )
+    model = genai.GenerativeModel(model_name=config["agent"]["model"])
+    response = model.generate_content(user_prompt)
     raw = response.text.strip()
 
     if "```" in raw:
