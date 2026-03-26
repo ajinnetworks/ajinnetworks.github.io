@@ -49,6 +49,7 @@ jobs:
           HUMAN_GATE=false
           LOG_LEVEL=INFO
           EOF
+          echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env
 
       - name: 블로그 포스트 자동 생성 및 발행
         run: |
