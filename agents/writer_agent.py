@@ -10,7 +10,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-import anthropic
+from google import genai
 import yaml
 
 logger = logging.getLogger(__name__)
@@ -66,13 +66,14 @@ def load_writer_prompt() -> str:
 
 def generate_post(topic: dict) -> dict:
     config = load_config()
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
     system_prompt = load_writer_prompt()
 
     pre_category = classify_category(topic["keyword"], topic.get("angle", ""))
 
     writer_config = config["writer"]
-    user_prompt = f"""
+    user_prompt = f"""{system_prompt}
+
 다음 주제로 블로그 포스트를 작성하세요.
 
 키워드: {topic["keyword"]}
@@ -106,14 +107,11 @@ def generate_post(topic: dict) -> dict:
 
     logger.info(f"Writer Agent: '{topic['keyword']}' 작성 시작 (예상 카테고리: {pre_category})")
 
-    message = client.messages.create(
+    response = client.models.generate_content(
         model=config["agent"]["model"],
-        max_tokens=config["agent"]["max_tokens"],
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_prompt}],
+        contents=user_prompt,
     )
-
-    raw = message.content[0].text.strip()
+    raw = response.text.strip()
 
     if "```" in raw:
         parts = raw.split("```")
