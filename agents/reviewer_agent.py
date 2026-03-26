@@ -9,7 +9,7 @@ import logging
 import os
 from pathlib import Path
 
-from google import genai
+import google.generativeai as genai
 import yaml
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ def review_post(post: dict) -> dict:
     Returns: review_result dict { total_score, breakdown, issues, pass, revision_notes }
     """
     config = load_config()
-    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
     system_prompt = load_reviewer_prompt()
     min_score = config["reviewer"]["min_score"]
 
@@ -61,10 +61,8 @@ SEO 키워드: {post.get('seo_keywords', [])}
 JSON만 반환:
 """
 
-    response = client.models.generate_content(
-        model=config["agent"]["model"],
-        contents=user_prompt,
-    )
+    model = genai.GenerativeModel(model_name=config["agent"]["model"])
+    response = model.generate_content(user_prompt)
     raw = response.text.strip()
     if "```" in raw:
         parts = raw.split("```")
@@ -107,7 +105,7 @@ def revise_post(post: dict, review: dict) -> dict:
     최대 2회 재시도 (무한 루프 방지).
     """
     config = load_config()
-    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
     issues_text = "\n".join(
         [f"- [{i['severity']}] {i['description']}"
@@ -127,10 +125,8 @@ def revise_post(post: dict, review: dict) -> dict:
 개선된 포스트를 동일한 JSON 형식으로 반환:
 """
 
-    response = client.models.generate_content(
-        model=config["agent"]["model"],
-        contents=prompt,
-    )
+    model = genai.GenerativeModel(model_name=config["agent"]["model"])
+    response = model.generate_content(prompt)
     raw = response.text.strip()
     if "```" in raw:
         parts = raw.split("```")
