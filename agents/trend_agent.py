@@ -9,7 +9,7 @@ import os
 from datetime import datetime
 from typing import Optional
 
-from google import genai
+import google.generativeai as genai
 import requests
 import yaml
 
@@ -101,7 +101,7 @@ def select_topics_via_gemini(
     Gemini API를 통해 수집된 트렌드 중 블로그 도메인에 적합한 주제 top_n개 선정.
     Manager AI 역할: 전략적 주제 선정.
     """
-    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
     trends_text = "\n".join(
         [f"- [{t['source']}] {t['keyword']}" for t in raw_trends[:50]]
@@ -130,10 +130,8 @@ def select_topics_via_gemini(
 }}
 """
 
-    response = client.models.generate_content(
-        model="gemini-flash-latest",
-        contents=prompt,
-    )
+    model = genai.GenerativeModel(model_name="gemini-flash-latest")
+    response = model.generate_content(prompt)
     raw = response.text.strip()
     # JSON 펜스 제거
     if raw.startswith("```"):
