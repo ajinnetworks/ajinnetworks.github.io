@@ -36,14 +36,7 @@ jobs:
 
       - name: 의존성 설치
         run: |
-          pip install 
-            google-generativeai>=0.3.0 
-            PyGithub 
-            python-frontmatter 
-            requests 
-            pyyaml 
-            python-dotenv 
-            schedule
+          pip install anthropic PyGithub python-frontmatter requests PyYAML python-dotenv schedule google-generativeai
 
       - name: .env 파일 생성
         run: |
