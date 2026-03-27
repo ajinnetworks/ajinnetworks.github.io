@@ -36,6 +36,7 @@ defaults:
     values:
       layout: "post"
       author: "아진네트웍스 주식회사"
+      image: /assets/img/og-default.png
 
 # ── 포스트 설정 ───────────────────────────────────
 permalink: /:year/:month/:day/:title/

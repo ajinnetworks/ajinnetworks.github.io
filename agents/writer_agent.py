@@ -168,6 +168,7 @@ tags: {post.get("tags", [])}
 category: {post.get("category", "")}
 generated_at: {post.get("generated_at", "")}
 word_count: {post.get("word_count", 0)}
+image: /assets/img/og-default.png
 ---
 
 {post.get("content", "")}
