@@ -56,13 +56,13 @@ if not GITHUB_TOKEN:
 def get_github_config() -> dict:
     """환경변수에서 GitHub 설정 읽기."""
     token = GITHUB_TOKEN
-    repo_name = os.environ.get("GITHUB_REPO")          # 예: "username/username.github.io"
+    repo_name = os.environ.get("BLOG_REPO") or os.environ.get("GITHUB_REPO")
     branch = os.environ.get("GITHUB_BRANCH", "main")
     posts_path = os.environ.get("GITHUB_POSTS_PATH", "_posts")
 
     if not repo_name:
         raise EnvironmentError(
-            "필수 환경변수 미설정: GITHUB_REPO\n"
+            "필수 환경변수 미설정: BLOG_REPO\n"
             "config/.env.sample 참고 후 .env에 추가하세요."
         )
 

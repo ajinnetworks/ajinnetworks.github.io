@@ -63,7 +63,7 @@ logger = logging.getLogger("run_agent")
 def validate_env(platform: str = "github") -> bool:
     required = ["ANTHROPIC_API_KEY"]
     if platform == "github":
-        required += ["GITHUB_TOKEN", "GITHUB_REPO"]
+        required += ["BLOG_GITHUB_TOKEN", "BLOG_REPO"]
     elif platform == "wordpress":
         required += ["WORDPRESS_URL", "WORDPRESS_USERNAME", "WORDPRESS_APP_PASSWORD"]
 
