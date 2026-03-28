@@ -11,7 +11,7 @@ import time
 from functools import wraps
 from pathlib import Path
 
-import google.generativeai as genai
+from google import genai as google_genai
 import yaml
 
 import io
@@ -64,24 +64,24 @@ def retry_on_rate_limit(max_retries: int = 3, wait_seconds: int = 60):
 
 # 모델 우선순위 (한도 초과 시 자동 전환)
 GEMINI_MODELS = [
-    "gemini-1.5-flash",     # 1순위
-    "gemini-2.0-flash",     # 2순위
-    "gemini-1.5-flash-8b",  # 3순위 (경량)
+    "gemini-2.0-flash",       # 1순위
+    "gemini-2.0-flash-lite",  # 2순위 (경량, 429 대비)
+    "gemini-flash-latest",    # 3순위 (최신 alias)
 ]
 
 
 def get_gemini_response(prompt: str) -> str:
     """GEMINI_MODELS 순서대로 시도, 429 시 다음 모델로 전환."""
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+    client = google_genai.Client(api_key=os.environ["GEMINI_API_KEY"])
     for model_name in GEMINI_MODELS:
         try:
-            model = genai.GenerativeModel(model_name)
-            response = model.generate_content(prompt)
+            response = client.models.generate_content(model=model_name, contents=prompt)
             logger.info(f"[MODEL] {model_name} 사용")
             return response.text.strip()
         except Exception as e:
-            if "429" in str(e) or "quota" in str(e).lower() or "ResourceExhausted" in type(e).__name__:
-                logger.warning(f"[WARN] {model_name} 한도 초과 → 다음 모델 시도")
+            err = str(e)
+            if "429" in err or "quota" in err.lower() or "ResourceExhausted" in type(e).__name__ or "404" in err:
+                logger.warning(f"[WARN] {model_name} 사용 불가 → 다음 모델 시도")
                 continue
             raise
     raise RuntimeError("모든 Gemini 모델 한도 초과")
