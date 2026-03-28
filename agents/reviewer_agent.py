@@ -26,6 +26,30 @@ if sys.stderr.encoding != 'utf-8':
 
 logger = logging.getLogger(__name__)
 
+# 모델 우선순위 (한도 초과 시 자동 전환)
+GEMINI_MODELS = [
+    "gemini-1.5-flash",     # 1순위
+    "gemini-2.0-flash",     # 2순위
+    "gemini-1.5-flash-8b",  # 3순위 (경량)
+]
+
+
+def get_gemini_response(prompt: str) -> str:
+    """GEMINI_MODELS 순서대로 시도, 429 시 다음 모델로 전환."""
+    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+    for model_name in GEMINI_MODELS:
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(prompt)
+            logger.info(f"[MODEL] {model_name} 사용")
+            return response.text.strip()
+        except Exception as e:
+            if "429" in str(e) or "quota" in str(e).lower() or "ResourceExhausted" in type(e).__name__:
+                logger.warning(f"[WARN] {model_name} 한도 초과 → 다음 모델 시도")
+                continue
+            raise
+    raise RuntimeError("모든 Gemini 모델 한도 초과")
+
 
 def load_config() -> dict:
     config_path = Path(__file__).parent.parent / "config" / "settings.yaml"
@@ -45,7 +69,6 @@ def review_post(post: dict) -> dict:
     Returns: review_result dict { total_score, breakdown, issues, pass, revision_notes }
     """
     config = load_config()
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
     system_prompt = load_reviewer_prompt()
     min_score = config["reviewer"]["min_score"]
 
@@ -73,9 +96,7 @@ SEO 키워드: {post.get('seo_keywords', [])}
 JSON만 반환:
 """
 
-    model = genai.GenerativeModel(model_name=config["agent"]["model"])
-    response = model.generate_content(user_prompt)
-    raw = response.text.strip()
+    raw = get_gemini_response(user_prompt)
     if "```" in raw:
         parts = raw.split("```")
         for part in parts:
@@ -117,7 +138,6 @@ def revise_post(post: dict, review: dict) -> dict:
     최대 2회 재시도 (무한 루프 방지).
     """
     config = load_config()
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
     issues_text = "\n".join(
         [f"- [{i['severity']}] {i['description']}"
@@ -137,9 +157,7 @@ def revise_post(post: dict, review: dict) -> dict:
 개선된 포스트를 동일한 JSON 형식으로 반환:
 """
 
-    model = genai.GenerativeModel(model_name=config["agent"]["model"])
-    response = model.generate_content(prompt)
-    raw = response.text.strip()
+    raw = get_gemini_response(prompt)
     if "```" in raw:
         parts = raw.split("```")
         for part in parts:

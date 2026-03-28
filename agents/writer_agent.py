@@ -27,6 +27,30 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
+# 모델 우선순위 (한도 초과 시 자동 전환)
+GEMINI_MODELS = [
+    "gemini-1.5-flash",     # 1순위
+    "gemini-2.0-flash",     # 2순위
+    "gemini-1.5-flash-8b",  # 3순위 (경량)
+]
+
+
+def get_gemini_response(prompt: str) -> str:
+    """GEMINI_MODELS 순서대로 시도, 429 시 다음 모델로 전환."""
+    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+    for model_name in GEMINI_MODELS:
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(prompt)
+            logger.info(f"[MODEL] {model_name} 사용")
+            return response.text.strip()
+        except Exception as e:
+            if "429" in str(e) or "quota" in str(e).lower() or "ResourceExhausted" in type(e).__name__:
+                logger.warning(f"[WARN] {model_name} 한도 초과 → 다음 모델 시도")
+                continue
+            raise
+    raise RuntimeError("모든 Gemini 모델 한도 초과")
+
 BLOG_CATEGORIES = [
     {
         "name": "포장자동화",
@@ -168,7 +192,6 @@ def load_writer_prompt() -> str:
 
 def generate_post(topic: dict) -> dict:
     config = load_config()
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
     system_prompt = load_writer_prompt()
 
     pre_category = classify_category(topic["keyword"], topic.get("angle", ""))
@@ -209,9 +232,7 @@ def generate_post(topic: dict) -> dict:
 
     logger.info(f"Writer Agent: '{topic['keyword']}' 작성 시작 (예상 카테고리: {pre_category})")
 
-    model = genai.GenerativeModel(model_name=config["agent"]["model"])
-    response = model.generate_content(user_prompt)
-    raw = response.text.strip()
+    raw = get_gemini_response(user_prompt)
 
     if "```" in raw:
         parts = raw.split("```")
