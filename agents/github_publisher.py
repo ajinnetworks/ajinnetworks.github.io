@@ -369,6 +369,10 @@ def run_github_publisher(posts: list[dict], dry_run: bool = False) -> list[dict]
     """
     logger.info("=== GitHub Pages Publisher 시작 ===" + (" [DRY-RUN]" if dry_run else ""))
 
+    if not posts:
+        print("[WARN] 발행할 포스트 없음")
+        return []
+
     # 환경변수 확인
     try:
         config = get_github_config()
@@ -377,24 +381,20 @@ def run_github_publisher(posts: list[dict], dry_run: bool = False) -> list[dict]
         return [{"error": str(e), "platform": "github_pages"}]
 
     # STEP 1: 필터링 + 마크다운 변환
-    ready_files = []   # [{"file_path": ..., "content": ..., "post": ..., "file_name": ...}]
-    skipped = []
+    ready_files = []
 
     for post in posts:
         if post.get("error"):
             logger.warning(f"오류 포스트 스킵: {post.get('title')}")
-            skipped.append(post)
             continue
 
         if not post.get("review_result", {}).get("pass"):
             score = post.get("review_result", {}).get("total_score", 0)
             logger.warning(f"검수 미합격 스킵: '{post.get('title')}' (점수: {score})")
-            skipped.append(post)
             continue
 
         if not human_approval_gate(post):
             logger.info(f"사용자 거절/스킵: '{post.get('title')}'")
-            skipped.append(post)
             continue
 
         file_name, md_content = post_to_jekyll_markdown(post)
@@ -408,14 +408,15 @@ def run_github_publisher(posts: list[dict], dry_run: bool = False) -> list[dict]
         })
 
     if not ready_files:
-        logger.warning("발행 대상 포스트 없음")
+        print("[WARN] 커밋할 파일 없음")
         return [{"error": "발행 대상 없음", "platform": "github_pages"}]
 
     # STEP 2: dry-run 차단
     if dry_run:
         results = []
         for f in ready_files:
-            logger.info(f"[dry-run] 커밋 차단 — 실제 GitHub 전송 없음: {f['file_path']}")
+            logger.info(f"[dry-run] 커밋 차단: {f['file_path']}")
+            print(f"[DRY-RUN] {f['post'].get('title', '')}: {f['file_path']}")
             result = {
                 "file_path": f["file_path"],
                 "file_name": f["file_name"],
@@ -424,26 +425,45 @@ def run_github_publisher(posts: list[dict], dry_run: bool = False) -> list[dict]
                 "blog_url": "(dry-run)",
                 "action": "dry-run",
             }
-            record_path = save_publish_record(f["post"], result)
-            result["record_path"] = record_path
+            save_publish_record(f["post"], result)
             results.append(result)
-            print(f"\n[DRY-RUN] {f['file_path']}")
         logger.info(f"GitHub Pages Publisher 완료: {len(results)}/{len(posts)}개 (dry-run)")
         return results
 
-    # STEP 3: 일괄 커밋
+    # STEP 3: Git Tree API 일괄 커밋
     today = datetime.now(KST).strftime("%Y-%m-%d")
-    commit_message = (
+
+    auth = Auth.Token(GITHUB_TOKEN)
+    g = Github(auth=auth)
+    repo = g.get_repo(config["repo_name"])
+
+    ref = repo.get_git_ref(f"heads/{config['branch']}")
+    base_tree = repo.get_git_tree(ref.object.sha)
+
+    tree_elements = []
+    for f in ready_files:
+        blob = repo.create_git_blob(f["content"], "utf-8")
+        tree_elements.append(InputGitTreeElement(
+            path=f["file_path"],
+            mode="100644",
+            type="blob",
+            sha=blob.sha,
+        ))
+
+    if not tree_elements:
+        print("[WARN] 커밋할 파일 없음")
+        return [{"error": "tree_elements 비어있음", "platform": "github_pages"}]
+
+    commit_msg = (
         f"docs: auto-post {len(ready_files)}개 포스트 발행 ({today})\n\n"
         + "\n".join(f"- {f['file_name']}" for f in ready_files)
     )
 
     try:
-        batch_result = batch_commit_to_github(
-            files=[{"file_path": f["file_path"], "content": f["content"]} for f in ready_files],
-            config=config,
-            commit_message=commit_message,
-        )
+        new_tree = repo.create_git_tree(tree_elements, base_tree)
+        parent = repo.get_git_commit(ref.object.sha)
+        new_commit = repo.create_git_commit(commit_msg, new_tree, [parent])
+        ref.edit(new_commit.sha)
     except GithubException as e:
         logger.error(f"일괄 커밋 실패: {e.status} {e.data}")
         return [{"error": f"GitHub API {e.status}: {e.data}", "platform": "github_pages"}]
@@ -451,27 +471,31 @@ def run_github_publisher(posts: list[dict], dry_run: bool = False) -> list[dict]
         logger.error(f"일괄 커밋 실패: {e}")
         return [{"error": str(e), "platform": "github_pages"}]
 
+    commit_sha = new_commit.sha
+    username = config["repo_name"].split("/")[0]
+    blog_url = f"https://{username}.github.io"
+    commit_url = f"https://github.com/{config['repo_name']}/commit/{commit_sha}"
+
+    print(f"[SUCCESS] {len(ready_files)}개 포스트 일괄 커밋: {commit_sha[:7]}")
+    print(f"   커밋   : {commit_url}")
+    print(f"   블로그 : {blog_url}")
+    for f in ready_files:
+        print(f"   - {f['file_name']}")
+    print(f"   ※ GitHub Actions 빌드 후 1~3분 내 반영됩니다.")
+
     # STEP 4: 결과 구성 + 발행 기록 저장
     results = []
     for f in ready_files:
         result = {
             "file_path": f["file_path"],
             "file_name": f["file_name"],
-            "commit_sha": batch_result["commit_sha"],
-            "commit_url": batch_result["commit_url"],
-            "blog_url": batch_result["blog_url"],
+            "commit_sha": commit_sha,
+            "commit_url": commit_url,
+            "blog_url": blog_url,
             "action": "일괄 커밋",
         }
-        record_path = save_publish_record(f["post"], result)
-        result["record_path"] = record_path
+        save_publish_record(f["post"], result)
         results.append(result)
-
-    print(f"\n발행 완료! {len(ready_files)}개 포스트 단일 커밋")
-    print(f"   커밋   : {batch_result['commit_url']}")
-    print(f"   블로그 : {batch_result['blog_url']}")
-    for f in ready_files:
-        print(f"   - {f['file_name']}")
-    print(f"   ※ GitHub Actions 빌드 후 1~3분 내 반영됩니다.")
 
     logger.info(f"GitHub Pages Publisher 완료: {len(results)}/{len(posts)}개 발행")
     return results
