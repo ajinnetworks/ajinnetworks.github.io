@@ -916,3 +916,12 @@ window.addEventListener('scroll', function() {
   gtag('js', new Date());
   gtag('config', 'G-RYPE4V64TJ');
 </script>
+
+<!-- Service Worker 등록 -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/sw.js');
+    });
+  }
+</script>
