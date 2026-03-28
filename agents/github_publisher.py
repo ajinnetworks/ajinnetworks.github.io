@@ -7,17 +7,22 @@ Goal: 검수 완료 포스트를 Jekyll 마크다운으로 변환 후
 설치: pip install PyGithub python-frontmatter
 """
 
+import io
 import json
 import logging
 import os
 import re
 import sys
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import frontmatter                  # python-frontmatter
-from github import Github, GithubException   # PyGithub
+from github import Auth, Github, GithubException   # PyGithub
 
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
@@ -155,6 +160,7 @@ def commit_post_to_github(
     md_content: str,
     config: dict,
     commit_message: str = None,
+    dry_run: bool = False,
 ) -> dict:
     """
     GitHub API를 통해 _posts/ 에 마크다운 파일 커밋.
@@ -162,12 +168,24 @@ def commit_post_to_github(
     Returns:
         { file_path, commit_sha, html_url, blog_url }
     """
-    g = Github(config["token"])
+    posts_path = config["posts_path"]
+    file_path = f"{posts_path}/{file_name}"
+
+    if dry_run:
+        logger.info(f"[dry-run] 커밋 차단 — 실제 GitHub 전송 없음: {file_path}")
+        return {
+            "file_path": file_path,
+            "file_name": file_name,
+            "commit_sha": "dry-run-no-commit",
+            "commit_url": "(dry-run)",
+            "blog_url": "(dry-run)",
+            "action": "dry-run",
+        }
+
+    g = Github(auth=Auth.Token(config["token"]))
     repo = g.get_repo(config["repo_name"])
     branch = config["branch"]
-    posts_path = config["posts_path"]
 
-    file_path = f"{posts_path}/{file_name}"
     commit_msg = commit_message or f"docs: auto-post '{file_name}' via AI agent"
 
     logger.info(f"GitHub 커밋 시도: {config['repo_name']}/{file_path}")
@@ -277,12 +295,16 @@ def save_publish_record(post: dict, github_result: dict) -> str:
 
 # ─── 레포지토리 초기화 유틸 ──────────────────────────────────────────────────
 
-def init_github_repo(config: dict) -> bool:
+def init_github_repo(config: dict, dry_run: bool = False) -> bool:
     """
     GitHub 레포지토리에 Jekyll 기본 파일이 없으면 자동으로 업로드.
     github_pages/ 폴더의 파일들을 레포지토리에 커밋.
     """
-    g = Github(config["token"])
+    if dry_run:
+        print("[dry-run] GitHub 연결 생략 — init_github_repo 스킵")
+        return None
+
+    g = Github(auth=Auth.Token(config["token"]))
     repo = g.get_repo(config["repo_name"])
     branch = config["branch"]
 
@@ -330,17 +352,18 @@ def init_github_repo(config: dict) -> bool:
 
 # ─── 메인 발행 함수 ───────────────────────────────────────────────────────────
 
-def run_github_publisher(posts: list[dict]) -> list[dict]:
+def run_github_publisher(posts: list[dict], dry_run: bool = False) -> list[dict]:
     """
     검수 완료 포스트 리스트를 GitHub Pages에 발행.
 
     Args:
-        posts: reviewer_agent에서 반환된 포스트 리스트
+        posts:   reviewer_agent에서 반환된 포스트 리스트
+        dry_run: True이면 마크다운 변환까지만 수행, GitHub 커밋 차단
 
     Returns:
         발행 결과 리스트
     """
-    logger.info("=== GitHub Pages Publisher 시작 ===")
+    logger.info("=== GitHub Pages Publisher 시작 ===" + (" [DRY-RUN]" if dry_run else ""))
 
     # 환경변수 확인
     try:
@@ -375,11 +398,12 @@ def run_github_publisher(posts: list[dict]) -> list[dict]:
             file_name, md_content = post_to_jekyll_markdown(post)
             logger.info(f"마크다운 변환 완료: {file_name} ({len(md_content)}자)")
 
-            # GitHub 커밋
+            # GitHub 커밋 (dry_run=True이면 실제 전송 없음)
             github_result = commit_post_to_github(
                 file_name=file_name,
                 md_content=md_content,
                 config=config,
+                dry_run=dry_run,
             )
 
             # 발행 기록 저장
@@ -415,15 +439,38 @@ def run_github_publisher(posts: list[dict]) -> list[dict]:
 
 
 if __name__ == "__main__":
+    import sys as _sys
     logging.basicConfig(level=logging.INFO)
-    print("GitHub Pages Publisher — 단독 실행은 run_agent.py를 통해 사용하세요.")
-    print("레포 초기화 테스트:")
+    dry_run = "--dry-run" in _sys.argv
+
+    print("GitHub Pages Publisher - 환경변수 확인")
     try:
         from dotenv import load_dotenv
         load_dotenv(ROOT / ".env", override=True)
         cfg = get_github_config()
-        print(f"  레포: {cfg['repo_name']}")
-        print(f"  브랜치: {cfg['branch']}")
-        print("  ✅ 환경변수 확인 완료")
+        print(f"  repo     : {cfg['repo_name']}")
+        print(f"  branch   : {cfg['branch']}")
+        print(f"  dry-run  : {dry_run}")
+        print("  [OK] 환경변수 확인 완료")
     except EnvironmentError as e:
-        print(f"  ❌ {e}")
+        print(f"  [ERROR] {e}")
+        _sys.exit(1)
+
+    if dry_run:
+        print()
+        print("[dry-run] 샘플 포스트 1건으로 publish 경로 테스트")
+        sample = [{
+            "title": "dry-run 테스트 포스트",
+            "content": "# 테스트\n\nDry-run 확인용 포스트입니다.",
+            "category": "스마트팩토리",
+            "tags": ["테스트"],
+            "filename": "2099-01-01-dry-run-test.md",
+            "review_result": {"pass": True, "total_score": 100},
+        }]
+        results = run_github_publisher(sample, dry_run=True)
+        for r in results:
+            print(f"  status : {r.get('github_status', 'unknown')}")
+            print(f"  path   : {r.get('github_path', '-')}")
+    else:
+        print()
+        print("단독 실행 시에는 --dry-run 옵션을 사용하거나 run_agent.py 를 통해 실행하세요.")

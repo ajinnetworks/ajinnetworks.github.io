@@ -13,6 +13,18 @@ import google.generativeai as genai
 import requests
 import yaml
 
+import io
+import sys
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout = io.TextIOWrapper(
+        sys.stdout.buffer, encoding='utf-8', errors='replace'
+    )
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr = io.TextIOWrapper(
+        sys.stderr.buffer, encoding='utf-8', errors='replace'
+    )
+
+
 from agents.writer_agent import is_valid_topic, EXCLUDE_KEYWORDS
 
 logger = logging.getLogger(__name__)
@@ -196,7 +208,6 @@ def run_trend_agent(blog_domain: Optional[str] = None) -> list[dict]:
         json.dump({
             "timestamp": datetime.now().isoformat(),
             "raw_count": len(all_trends),
-            "filtered_count": len(filtered_trends),
             "selected": selected
         }, f, ensure_ascii=False, indent=2)
 

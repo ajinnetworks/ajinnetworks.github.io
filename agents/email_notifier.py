@@ -11,6 +11,18 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from zoneinfo import ZoneInfo
 
+import io
+import sys
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout = io.TextIOWrapper(
+        sys.stdout.buffer, encoding='utf-8', errors='replace'
+    )
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr = io.TextIOWrapper(
+        sys.stderr.buffer, encoding='utf-8', errors='replace'
+    )
+
+
 logger = logging.getLogger(__name__)
 KST = ZoneInfo("Asia/Seoul")
 

@@ -12,6 +12,18 @@ from pathlib import Path
 import google.generativeai as genai
 import yaml
 
+import io
+import sys
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout = io.TextIOWrapper(
+        sys.stdout.buffer, encoding='utf-8', errors='replace'
+    )
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr = io.TextIOWrapper(
+        sys.stderr.buffer, encoding='utf-8', errors='replace'
+    )
+
+
 logger = logging.getLogger(__name__)
 
 

@@ -104,31 +104,26 @@ def run_full_pipeline(
         "scores": [p.get("review_result", {}).get("total_score") for p in reviewed_posts],
     }
 
-    # STAGE 4: 발행
-    if dry_run:
-        logger.info("\n[STAGE 4] DRY-RUN — 발행 스킵")
-        for p in reviewed_posts:
-            if p.get("draft_path"):
-                logger.info(f"  초안: {p['draft_path']}")
-        result_summary["stages"]["publisher"] = {"skipped": True}
+    # STAGE 4: 발행 (dry_run=True 이면 github_publisher 내부에서 커밋 차단)
+    logger.info(f"\n[STAGE 4] 발행 → {platform_label}" + (" [DRY-RUN]" if dry_run else ""))
+    if platform == "github":
+        publish_results = run_github_publisher(reviewed_posts, dry_run=dry_run)
+        result_summary["stages"]["publisher"] = {
+            "platform": "github_pages",
+            "dry_run": dry_run,
+            "published": len([r for r in publish_results if not r.get("error")]),
+            "failed": len([r for r in publish_results if r.get("error")]),
+            "commit_urls": [r.get("commit_url") for r in publish_results if r.get("commit_url") and r.get("commit_url") != "(dry-run)"],
+            "blog_url": next((r.get("blog_url") for r in publish_results if r.get("blog_url") and r.get("blog_url") != "(dry-run)"), None),
+        }
     else:
-        logger.info(f"\n[STAGE 4] 발행 → {platform_label}")
-        if platform == "github":
-            publish_results = run_github_publisher(reviewed_posts)
-            result_summary["stages"]["publisher"] = {
-                "platform": "github_pages",
-                "published": len([r for r in publish_results if not r.get("error")]),
-                "failed": len([r for r in publish_results if r.get("error")]),
-                "commit_urls": [r.get("commit_url") for r in publish_results if r.get("commit_url")],
-                "blog_url": next((r.get("blog_url") for r in publish_results if r.get("blog_url")), None),
-            }
-        else:
-            publish_results = run_publisher_agent(reviewed_posts)
-            result_summary["stages"]["publisher"] = {
-                "platform": platform,
-                "published": len([r for r in publish_results if not r.get("error")]),
-                "urls": [r.get("url") for r in publish_results if r.get("url")],
-            }
+        publish_results = run_publisher_agent(reviewed_posts)
+        result_summary["stages"]["publisher"] = {
+            "platform": platform,
+            "dry_run": dry_run,
+            "published": len([r for r in publish_results if not r.get("error")]),
+            "urls": [r.get("url") for r in publish_results if r.get("url")],
+        }
 
     elapsed = (datetime.now() - start_time).total_seconds()
     result_summary["elapsed_seconds"] = round(elapsed, 1)
@@ -140,11 +135,11 @@ def run_full_pipeline(
     logger.info(f"  주제: {result_summary['stages']['trend']['count']}개")
     logger.info(f"  작성: {result_summary['stages']['writer']['succeeded']}개")
     logger.info(f"  합격: {result_summary['stages']['reviewer']['passed']}개")
-    if not dry_run:
-        pub = result_summary["stages"].get("publisher", {})
-        logger.info(f"  발행: {pub.get('published', 0)}개")
-        if pub.get("blog_url"):
-            logger.info(f"  URL : {pub['blog_url']}")
+    pub = result_summary["stages"].get("publisher", {})
+    label = "[DRY-RUN] 커밋 차단" if dry_run else "발행"
+    logger.info(f"  {label}: {pub.get('published', 0)}개")
+    if pub.get("blog_url"):
+        logger.info(f"  URL : {pub['blog_url']}")
     logger.info(f"  시간: {elapsed:.1f}초")
     logger.info("=" * 60)
     return result_summary
@@ -165,7 +160,7 @@ def main():
         try:
             cfg = get_github_config()
             logger.info(f"GitHub 레포 초기화: {cfg['repo_name']}")
-            success = init_github_repo(cfg)
+            success = init_github_repo(cfg, dry_run=False)
             if success:
                 username = cfg["repo_name"].split("/")[0]
                 print(f"\n✅ 초기화 완료: https://github.com/{cfg['repo_name']}")

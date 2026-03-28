@@ -4,9 +4,15 @@ Goal: 선정된 주제로 SEO 최적화된 블로그 포스트 초안 생성
 Worker AI 역할: 실제 콘텐츠 생성 실행
 """
 
+import io
 import json
 import logging
 import os
+import sys
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
 from datetime import datetime
 from pathlib import Path
 
