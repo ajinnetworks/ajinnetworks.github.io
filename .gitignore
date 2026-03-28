@@ -33,3 +33,4 @@ Thumbs.db
 config/evn.env
 config/*.env
 **/*.env
+python -c.txt
