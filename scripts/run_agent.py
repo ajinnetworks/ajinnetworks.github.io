@@ -12,12 +12,22 @@ Goal → Work → Result 3-tier 오케스트레이션
 """
 
 import argparse
+import io
 import json
 import logging
 import os
 import sys
 from datetime import datetime
 from pathlib import Path
+
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout = io.TextIOWrapper(
+        sys.stdout.buffer, encoding='utf-8', errors='replace'
+    )
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr = io.TextIOWrapper(
+        sys.stderr.buffer, encoding='utf-8', errors='replace'
+    )
 
 from dotenv import load_dotenv
 
