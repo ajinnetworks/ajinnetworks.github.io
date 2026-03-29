@@ -5,14 +5,14 @@ layout: null
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   {% for post in site.posts %}
   <url>
-    <loc>https://ajinnetworks.github.io{{ post.url }}</loc>
+    <loc>{{ post.url | prepend: site.url }}</loc>
     <lastmod>{{ post.date | date: "%Y-%m-%d" }}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   {% endfor %}
   <url>
-    <loc>https://ajinnetworks.github.io/</loc>
+    <loc>{{ site.url }}/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
