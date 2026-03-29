@@ -79,11 +79,17 @@ layout: default
     {% assign hero_sub   = 'Ajin Networks' %}
     {% assign hero_pattern = 'default' %}
 {% endcase %}
+{% if hero_pattern == 'default' %}
+  {% assign hero_image_url = "/assets/img/og-default.png" %}
+{% else %}
+  {% assign hero_image_url = "/assets/img/hero/" | append: hero_pattern | append: ".jpg" %}
+{% endif %}
 
 <style>
   :root {
     --hero-bg:     {{ hero_bg }};
     --hero-accent: {{ hero_accent }};
+    --hero-image: url('{{ hero_image_url }}');
   }
 
   /* ── 히어로 배너 ── */
