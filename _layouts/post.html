@@ -89,7 +89,6 @@ layout: default
   :root {
     --hero-bg:     {{ hero_bg }};
     --hero-accent: {{ hero_accent }};
-    --hero-image: url('{{ hero_image_url }}');
   }
 
   /* ── 히어로 배너 ── */
@@ -102,9 +101,7 @@ layout: default
     justify-content: center;
     text-align: center;
     padding: 60px 24px 48px;
-    background:
-      linear-gradient(rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.75) 100%),
-      var(--hero-image, var(--hero-bg)) center/cover no-repeat;
+    background: var(--hero-bg);
     overflow: hidden;
     margin-bottom: 0;
   }
@@ -330,13 +327,13 @@ layout: default
 </nav>
 
 <!-- 히어로 배너 -->
-<header class="post-hero">
+<header class="post-hero" style="background: linear-gradient(rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.78) 100%), url('{{ hero_image_url }}') center/cover no-repeat, {{ hero_bg }};">
   <div class="hero-content">
     <div class="hero-category-badge">
       <span class="hero-icon">{{ hero_icon }}</span>
       {{ cat }} · {{ hero_sub }}
     </div>
-    <h1 class="hero-title">{{ page.title }}</h1>
+    <h1 class="hero-title" style="color:#ffffff !important; text-shadow: 0 2px 20px rgba(0,0,0,0.8);">{{ page.title }}</h1>
     <div class="hero-meta">
       <span>📅 {{ page.date | date: "%Y년 %m월 %d일" }}</span>
       <span>·</span>
