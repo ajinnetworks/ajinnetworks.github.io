@@ -106,6 +106,14 @@ layout: default
     margin-bottom: 0;
   }
 
+  @media (max-width: 640px) {
+    .post-hero {
+      min-height: auto;
+      padding: 24px 16px;
+      overflow: visible;
+    }
+  }
+
   /* 배경 그리드 패턴 */
   .post-hero::before {
     content: '';
@@ -163,22 +171,27 @@ layout: default
 
   /* 메인 타이틀 */
   .hero-title {
-    font-size: clamp(1.6rem, 4vw, 2.6rem);
+    font-size: clamp(1.2rem, 4vw, 2.6rem);
     font-weight: 800;
     color: #ffffff;
     line-height: 1.25;
     margin: 0 0 16px;
     text-shadow: 0 0 40px var(--hero-accent)44;
     max-width: 760px;
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: break-word;
   }
 
   /* 날짜 + 읽기시간 */
   .hero-meta {
     display: flex;
     align-items: center;
-    gap: 16px;
+    flex-wrap: wrap;
+    gap: 4px 8px;
     color: rgba(255,255,255,0.92);
     font-size: 0.82rem;
+    white-space: normal;
   }
 
   .hero-meta span { display: flex; align-items: center; gap: 5px; }
@@ -218,6 +231,14 @@ layout: default
   }
 
   .cat-tab:hover { color: rgba(255,255,255,0.85); }
+
+  @media (max-width: 640px) {
+    .cat-tab {
+      font-size: 0.75rem;
+      padding: 10px 12px;
+      gap: 4px;
+    }
+  }
 
   /* 활성 탭 — 카테고리별 색상 */
   .cat-tab[data-cat="물류자동화"].active  { color:#00d4ff; border-color:#00d4ff; }
