@@ -29,6 +29,34 @@ main h2, main h3 { color: #111111 !important; font-weight:700 !important; }
   h1,h2,h3,h4 { color: #111111 !important; }
 }
 </style><!-- force_css_applied -->
+<style>
+/* 모바일 메인 타이틀 한 줄 최적화 */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 1.3rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    padding: 0 12px !important;
+  }
+  .hero-subtitle {
+    font-size: 0.85rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+}
+/* 푸터 텍스트 강제 흰색 */
+footer, .site-footer,
+footer *, .site-footer *,
+footer p, footer span, footer a,
+.footer-company, .footer-copy,
+footer h3, footer h4 {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+.footer-copy { color: rgba(255,255,255,0.85) !important; }
+</style><!-- footer_text_fix -->
 </head>
   <body>
     <!-- 읽기 진행 바 -->
