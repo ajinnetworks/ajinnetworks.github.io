@@ -8,8 +8,9 @@ url: "https://ajinnetworks.github.io"
 baseurl: ""
 company_url: "https://www.ajinnetworks.co.kr"
 
-author: "아진네트웍스 주식회사"
-email: ""
+author:
+  name: "아진네트웍스 주식회사"
+  email: ""
 
 # ── 테마 & 커스텀 CSS ─────────────────────────────
 theme: minima
