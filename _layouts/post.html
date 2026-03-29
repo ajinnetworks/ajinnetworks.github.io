@@ -356,6 +356,32 @@ layout: default
     </div>
   </div>
 </header>
+<script>
+(function() {
+  var pattern = "{{ hero_pattern }}";
+  var heroEl = document.querySelector('.post-hero');
+  if (heroEl && pattern && pattern !== 'default') {
+    var imgUrl = '/assets/img/hero/' + pattern + '.jpg';
+    heroEl.style.setProperty('background',
+      'linear-gradient(rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.78) 100%), url(' + imgUrl + ') center/cover no-repeat',
+      'important'
+    );
+  }
+  // 본문 텍스트 색상 강제
+  var content = document.querySelector('.post-content, .content, article .prose');
+  if (content) {
+    content.style.setProperty('color', '#333333', 'important');
+    var headings = content.querySelectorAll('h1,h2,h3,h4,h5,h6');
+    headings.forEach(function(h) {
+      h.style.setProperty('color', '#1a1a1a', 'important');
+    });
+    var paras = content.querySelectorAll('p');
+    paras.forEach(function(p) {
+      p.style.setProperty('color', '#333333', 'important');
+    });
+  }
+})();
+</script>
 
 <!-- 본문 -->
 <article class="post-body-wrap">
