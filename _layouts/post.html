@@ -210,11 +210,16 @@ layout: default
 
   .category-nav-inner {
     display: flex;
+    flex-wrap: nowrap;
     align-items: stretch;
     max-width: 900px;
     margin: 0 auto;
     padding: 0 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
+  .category-nav-inner::-webkit-scrollbar { display: none; }
 
   .cat-tab {
     display: flex;
@@ -225,43 +230,32 @@ layout: default
     font-size: 0.83rem;
     font-weight: 600;
     text-decoration: none;
+    white-space: nowrap;
     border-bottom: 2px solid transparent;
-    transition: color .2s, border-color .2s;
+    transition: color .2s, background .2s, border-color .2s;
+    flex-shrink: 0;
   }
 
   .cat-tab:hover { color: rgba(255,255,255,0.85); }
 
-  /* 768px 이하: 탭 크기 증가 */
+  /* 활성 탭 — 배경색 방식 */
+  .cat-tab.active {
+    background: rgba(255,255,255,0.12);
+    border-radius: 6px;
+    border-bottom: none;
+  }
+  .cat-tab[data-cat="물류자동화"].active  { color:#00d4ff; }
+  .cat-tab[data-cat="공장자동화"].active  { color:#00ff88; }
+  .cat-tab[data-cat="딥러닝비전"].active  { color:#bf00ff; }
+  .cat-tab[data-cat="스마트팩토리"].active{ color:#ffb300; }
+  .cat-tab[data-cat="제어SW"].active      { color:#4488ff; }
+
+  /* 768px 이하: 탭 크기 조정 */
   @media (max-width: 768px) {
     .cat-tab {
       font-size: 0.95rem;
       padding: 8px 14px;
-      font-weight: 600;
     }
-  }
-
-  /* 640px 이하: 2열 격자 */
-  @media (max-width: 640px) {
-    .category-nav {
-      overflow-x: visible;
-    }
-    .category-nav-inner {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      padding: 0;
-    }
-    .cat-tab {
-      padding: 10px 8px;
-      gap: 5px;
-      white-space: normal;
-      justify-content: center;
-      text-align: center;
-      border-bottom: none;
-      border-right: 1px solid #222;
-      border-bottom: 1px solid #222;
-    }
-    .cat-tab:nth-child(2n) { border-right: none; }
-    .cat-tab:nth-last-child(-n+2) { border-bottom: none; }
   }
 
   /* 480px 이하: 폰트 추가 축소 */
@@ -271,13 +265,6 @@ layout: default
       padding: 6px 10px;
     }
   }
-
-  /* 활성 탭 — 카테고리별 색상 */
-  .cat-tab[data-cat="물류자동화"].active  { color:#00d4ff; border-color:#00d4ff; }
-  .cat-tab[data-cat="공장자동화"].active  { color:#00ff88; border-color:#00ff88; }
-  .cat-tab[data-cat="딥러닝비전"].active  { color:#bf00ff; border-color:#bf00ff; }
-  .cat-tab[data-cat="스마트팩토리"].active{ color:#ffb300; border-color:#ffb300; }
-  .cat-tab[data-cat="제어SW"].active      { color:#4488ff; border-color:#4488ff; }
 
   /* ── 본문 래퍼 ── */
   .post-body-wrap {
