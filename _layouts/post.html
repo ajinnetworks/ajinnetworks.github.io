@@ -300,6 +300,22 @@ layout: default
   .post-tag:hover { border-color: var(--hero-accent); color: var(--hero-accent); }
 
 /* 본문 텍스트 가시성 강제 */
+.post-content h2, .post-content h3,
+.content h2, .content h3,
+article h2, article h3 {
+  color: #1a1a1a !important;
+  opacity: 1 !important;
+}
+/* 모바일 로고 사이즈 */
+@media (max-width: 768px) {
+  .site-logo img, .navbar-brand img, img.logo {
+    max-height: 32px !important;
+    width: auto !important;
+  }
+  .site-title {
+    font-size: 1rem !important;
+  }
+}
 .post-content, .post-content p, article p {
   color: #333333 !important;
 }
@@ -313,6 +329,23 @@ layout: default
   padding: 32px;
   border-radius: 12px;
 }
+
+/* 소제목 강제 가시성 */
+.post-content h2, .post-content h3, .post-content h4,
+.content h2, .content h3, article h2, article h3 {
+  color: #1a1a1a !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+/* 모바일 로고 */
+@media (max-width: 768px) {
+  img[src*="logo"], .site-logo img, .navbar-brand img {
+    max-height: 28px !important;
+    max-width: 120px !important;
+    width: auto !important;
+  }
+}
+
 </style>
 
 <!-- 카테고리 탭 네비게이션 -->
