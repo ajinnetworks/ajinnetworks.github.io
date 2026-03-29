@@ -2,6 +2,7 @@
 <html lang="{{ page.lang | default: site.lang | default: 'ko' }}">
   <head>
     {%- include head.html -%}
+    {% include seo-schema.html %}
     <title>
       {%- if page.title -%}{{ page.title }} | {{ site.title }}{%- else -%}{{ site.title }}{%- endif -%}
     </title>
@@ -30,20 +31,23 @@ main h2, main h3 { color: #111111 !important; font-weight:700 !important; }
 }
 </style><!-- force_css_applied -->
 <style>
-/* 모바일 메인 타이틀 한 줄 최적화 */
+/* 모바일 히어로 타이틀 — 줄바꿈 허용 */
 @media (max-width: 768px) {
   .hero-title {
-    font-size: 1.3rem !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    font-size: clamp(1.1rem, 3.8vw, 1.8rem) !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+    word-break: keep-all !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
     padding: 0 12px !important;
   }
   .hero-subtitle {
     font-size: 0.85rem !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
   }
 }
 /* 푸터 텍스트 강제 흰색 */
