@@ -106,10 +106,10 @@ layout: default
     margin-bottom: 0;
   }
 
-  @media (max-width: 640px) {
+  @media (max-width: 768px) {
     .post-hero {
       min-height: auto;
-      padding: 24px 16px;
+      padding: 28px 16px;
       overflow: visible;
     }
   }
@@ -171,10 +171,10 @@ layout: default
 
   /* 메인 타이틀 */
   .hero-title {
-    font-size: clamp(1.2rem, 4vw, 2.6rem);
+    font-size: clamp(1.1rem, 3.8vw, 1.8rem);
     font-weight: 800;
     color: #ffffff;
-    line-height: 1.25;
+    line-height: 1.4;
     margin: 0 0 16px;
     text-shadow: 0 0 40px var(--hero-accent)44;
     max-width: 760px;
@@ -188,7 +188,7 @@ layout: default
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 4px 8px;
+    gap: 4px 6px;
     color: rgba(255,255,255,0.92);
     font-size: 0.82rem;
     white-space: normal;
@@ -226,13 +226,21 @@ layout: default
     font-weight: 600;
     text-decoration: none;
     border-bottom: 2px solid transparent;
-    white-space: nowrap;
     transition: color .2s, border-color .2s;
   }
 
   .cat-tab:hover { color: rgba(255,255,255,0.85); }
 
-  /* 모바일: 2열 격자 */
+  /* 768px 이하: 탭 크기 증가 */
+  @media (max-width: 768px) {
+    .cat-tab {
+      font-size: 0.95rem;
+      padding: 8px 14px;
+      font-weight: 600;
+    }
+  }
+
+  /* 640px 이하: 2열 격자 */
   @media (max-width: 640px) {
     .category-nav {
       overflow-x: visible;
@@ -243,8 +251,7 @@ layout: default
       padding: 0;
     }
     .cat-tab {
-      font-size: 0.78rem;
-      padding: 12px 8px;
+      padding: 10px 8px;
       gap: 5px;
       white-space: normal;
       justify-content: center;
@@ -255,6 +262,14 @@ layout: default
     }
     .cat-tab:nth-child(2n) { border-right: none; }
     .cat-tab:nth-last-child(-n+2) { border-bottom: none; }
+  }
+
+  /* 480px 이하: 폰트 추가 축소 */
+  @media (max-width: 480px) {
+    .cat-tab {
+      font-size: 0.88rem;
+      padding: 6px 10px;
+    }
   }
 
   /* 활성 탭 — 카테고리별 색상 */
