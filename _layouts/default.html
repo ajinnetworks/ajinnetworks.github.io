@@ -6,7 +6,16 @@
       {%- if page.title -%}{{ page.title }} | {{ site.title }}{%- else -%}{{ site.title }}{%- endif -%}
     </title>
     <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
-  </head>
+  <style>
+@media (max-width: 768px) {
+  .footer-logo img { max-width: 180px !important; width: 100% !important; height: auto !important; }
+  .site-footer { padding: 24px 16px !important; }
+  .footer-info-grid { grid-template-columns: 1fr !important; }
+  .footer-company { font-size: 0.9rem !important; }
+  footer img { max-width: 200px !important; width: 100% !important; height: auto !important; }
+}
+</style>
+</head>
   <body>
     <!-- 읽기 진행 바 -->
     <div id="reading-progress"></div>
@@ -21,10 +30,10 @@
     <footer class="site-footer">
       <div class="wrapper">
         <div class="footer-company">
-  <div class="footer-logo" style="text-align:center;margin-bottom:15px;">
+  <div class="footer-logo" style="text-align:center;margin-bottom:15px;padding:0 16px;overflow:hidden;">
     <picture>
       <source srcset="{{ '/assets/images/ajin_logo_footer_white.webp' | relative_url }}" type="image/webp">
-      <img src="{{ '/assets/images/ajin_logo_footer_white.png' | relative_url }}"
+      <img src="{{ '/assets/images/ajin_logo_footer_white.png' | relative_url }}" style="max-width:200px;width:100%;height:auto;"
            alt="아진네트웍스(주) 로고"
            loading="lazy"
            width="389" height="70">
