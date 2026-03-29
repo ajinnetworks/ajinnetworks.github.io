@@ -1,49 +1,82 @@
 ﻿---
 layout: default
 ---
-<div style="max-width:860px;margin:0 auto;padding:48px 24px;">
+<style>
+.cat-page-nav{background:#0e0e0e;border-bottom:1px solid #222;overflow-x:auto;scrollbar-width:none;}
+.cat-page-nav::-webkit-scrollbar{display:none;}
+.cat-page-nav-inner{display:flex;max-width:860px;margin:0 auto;padding:0 16px;}
+.cat-page-tab{display:flex;align-items:center;gap:6px;padding:13px 18px;color:rgba(255,255,255,.4);font-size:.82rem;font-weight:600;text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap;transition:color .2s,border-color .2s;}
+.cat-page-tab:hover{color:rgba(255,255,255,.8);}
+.cat-page-tab.active{color:#1a73e8;border-color:#1a73e8;}
+.cat-header{max-width:860px;margin:40px auto 32px;padding:0 24px;display:flex;align-items:center;gap:12px;}
+.cat-header h1{font-size:2rem;font-weight:800;margin:0;}
+.cat-count{background:#1a73e8;color:#fff;font-size:.8rem;padding:4px 12px;border-radius:100px;}
+.cat-list{max-width:860px;margin:0 auto;padding:0 24px 60px;display:flex;flex-direction:column;gap:20px;}
+.cat-card{background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:24px;}
+.cat-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08);}
+.cat-badge{background:#f0f4ff;color:#1a73e8;font-size:.75rem;font-weight:600;padding:3px 10px;border-radius:100px;text-decoration:none;}
+.cat-date{color:#999;font-size:.82rem;}
+.cat-title a{font-size:1.15rem;font-weight:700;color:#1a1a1a;text-decoration:none;display:block;margin:10px 0 8px;}
+.cat-title a:hover{color:#1a73e8;}
+.cat-desc{color:#666;font-size:.9rem;line-height:1.6;margin:0 0 14px;}
+.cat-more{color:#1a73e8;font-size:.85rem;font-weight:600;text-decoration:none;}
+.empty-cat{text-align:center;padding:60px 24px;color:#999;}
+</style>
 
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:32px;padding-bottom:20px;border-bottom:2px solid #e0e0e0;">
-    <h1 style="font-size:2rem;font-weight:800;margin:0;">{{ page.title }}</h1>
-    <span style="background:#1a73e8;color:#fff;font-size:.8rem;padding:4px 12px;border-radius:100px;">
-      {% assign count = 0 %}
-      {% for post in site.posts %}
-        {% if post.categories contains page.category %}
-          {% assign count = count | plus: 1 %}
-        {% endif %}
-      {% endfor %}
-      {{ count }}개 포스트
-    </span>
+<!-- 카테고리 탭 네비게이션 -->
+<nav class="cat-page-nav">
+  <div class="cat-page-nav-inner">
+    <a class="cat-page-tab {% if page.category == '물류자동화' %}active{% endif %}"
+       href="/category/물류자동화/">📦 물류자동화</a>
+    <a class="cat-page-tab {% if page.category == '공장자동화' %}active{% endif %}"
+       href="/category/공장자동화/">🏭 공장자동화</a>
+    <a class="cat-page-tab {% if page.category == '딥러닝비전' %}active{% endif %}"
+       href="/category/딥러닝비전/">🤖 딥러닝비전</a>
+    <a class="cat-page-tab {% if page.category == '스마트팩토리' %}active{% endif %}"
+       href="/category/스마트팩토리/">⚡ 스마트팩토리</a>
+    <a class="cat-page-tab {% if page.category == '제어SW' %}active{% endif %}"
+       href="/category/제어SW/">💻 제어SW</a>
   </div>
+</nav>
 
-  <div style="display:flex;flex-direction:column;gap:20px;">
+<!-- 카테고리 헤더 -->
+<div class="cat-header">
+  <h1>{{ page.title }}</h1>
+  <span class="cat-count">
+    {% assign count = 0 %}
     {% for post in site.posts %}
       {% if post.categories contains page.category %}
-      <article style="background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:24px;transition:box-shadow .2s;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-          <span style="background:#f0f4ff;color:#1a73e8;font-size:.75rem;font-weight:600;padding:3px 10px;border-radius:100px;">
-            {{ post.categories | first }}
-          </span>
-          <span style="color:#999;font-size:.82rem;">
-            {{ post.date | date: "%Y년 %m월 %d일" }}
-          </span>
-        </div>
-        <h2 style="font-size:1.15rem;font-weight:700;margin:0 0 10px;">
-          <a href="{{ post.url }}" style="text-decoration:none;color:#1a1a1a;">
-            {{ post.title }}
-          </a>
-        </h2>
-        {% if post.description %}
-        <p style="color:#666;font-size:.9rem;line-height:1.6;margin:0 0 14px;">
-          {{ post.description | truncate: 120 }}
-        </p>
-        {% endif %}
-        <a href="{{ post.url }}" style="color:#1a73e8;font-size:.85rem;font-weight:600;text-decoration:none;">
-          더 읽기 →
-        </a>
-      </article>
+        {% assign count = count | plus: 1 %}
       {% endif %}
     {% endfor %}
-  </div>
+    {{ count }}개 포스트
+  </span>
+</div>
 
+<!-- 포스트 목록 -->
+<div class="cat-list">
+  {% assign filtered = site.posts | where_exp: "post", "post.categories contains page.category" %}
+  {% if filtered.size == 0 %}
+    <div class="empty-cat">
+      <p style="font-size:2rem;margin-bottom:12px;">📭</p>
+      <p>아직 포스트가 없습니다.</p>
+      <a href="/" style="color:#1a73e8;">홈으로 돌아가기</a>
+    </div>
+  {% else %}
+    {% for post in filtered %}
+    <article class="cat-card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <span class="cat-badge">{{ post.categories | first }}</span>
+        <span class="cat-date">{{ post.date | date: "%Y년 %m월 %d일" }}</span>
+      </div>
+      <div class="cat-title">
+        <a href="{{ post.url }}">{{ post.title }}</a>
+      </div>
+      {% if post.description %}
+      <p class="cat-desc">{{ post.description | truncate: 120 }}</p>
+      {% endif %}
+      <a class="cat-more" href="{{ post.url }}">더 읽기 →</a>
+    </article>
+    {% endfor %}
+  {% endif %}
 </div>
