@@ -104,14 +104,26 @@ layout: default
     background: var(--hero-bg);
     overflow: hidden;
     margin-bottom: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   @media (max-width: 768px) {
     .post-hero {
       min-height: auto;
       padding: 28px 16px;
-      overflow: visible;
+      overflow: hidden;
     }
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
   }
 
   /* 배경 그리드 패턴 */
@@ -144,11 +156,6 @@ layout: default
     100% { background-position: 40px 40px, 40px 40px; }
   }
 
-  .hero-content {
-    position: relative;
-    z-index: 2;
-  }
-
   /* 카테고리 배지 */
   .hero-category-badge {
     display: inline-flex;
@@ -177,10 +184,12 @@ layout: default
     line-height: 1.4;
     margin: 0 0 16px;
     text-shadow: 0 0 40px var(--hero-accent)44;
-    max-width: 760px;
+    width: 100%;
+    max-width: 100%;
     white-space: normal;
     word-break: keep-all;
     overflow-wrap: break-word;
+    box-sizing: border-box;
   }
 
   /* 날짜 + 읽기시간 */
@@ -192,6 +201,8 @@ layout: default
     color: rgba(255,255,255,0.92);
     font-size: 0.82rem;
     white-space: normal;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .hero-meta span { display: flex; align-items: center; gap: 5px; }
@@ -211,15 +222,11 @@ layout: default
   .category-nav-inner {
     display: flex;
     flex-wrap: nowrap;
-    align-items: stretch;
-    max-width: 900px;
+    width: max-content;
+    gap: 4px;
     margin: 0 auto;
     padding: 0 16px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
   }
-  .category-nav-inner::-webkit-scrollbar { display: none; }
 
   .cat-tab {
     display: flex;
