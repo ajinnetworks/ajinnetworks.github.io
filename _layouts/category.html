@@ -1,16 +1,49 @@
 ﻿---
 layout: default
 ---
-<div class="category-page">
-  <h2>{{ page.title }}</h2>
-  <ul>
+<div style="max-width:860px;margin:0 auto;padding:48px 24px;">
+
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:32px;padding-bottom:20px;border-bottom:2px solid #e0e0e0;">
+    <h1 style="font-size:2rem;font-weight:800;margin:0;">{{ page.title }}</h1>
+    <span style="background:#1a73e8;color:#fff;font-size:.8rem;padding:4px 12px;border-radius:100px;">
+      {% assign count = 0 %}
+      {% for post in site.posts %}
+        {% if post.categories contains page.category %}
+          {% assign count = count | plus: 1 %}
+        {% endif %}
+      {% endfor %}
+      {{ count }}개 포스트
+    </span>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:20px;">
     {% for post in site.posts %}
       {% if post.categories contains page.category %}
-      <li>
-        <a href="{{ post.url }}">{{ post.title }}</a>
-        <span>{{ post.date | date: "%Y년 %m월 %d일" }}</span>
-      </li>
+      <article style="background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:24px;transition:box-shadow .2s;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <span style="background:#f0f4ff;color:#1a73e8;font-size:.75rem;font-weight:600;padding:3px 10px;border-radius:100px;">
+            {{ post.categories | first }}
+          </span>
+          <span style="color:#999;font-size:.82rem;">
+            {{ post.date | date: "%Y년 %m월 %d일" }}
+          </span>
+        </div>
+        <h2 style="font-size:1.15rem;font-weight:700;margin:0 0 10px;">
+          <a href="{{ post.url }}" style="text-decoration:none;color:#1a1a1a;">
+            {{ post.title }}
+          </a>
+        </h2>
+        {% if post.description %}
+        <p style="color:#666;font-size:.9rem;line-height:1.6;margin:0 0 14px;">
+          {{ post.description | truncate: 120 }}
+        </p>
+        {% endif %}
+        <a href="{{ post.url }}" style="color:#1a73e8;font-size:.85rem;font-weight:600;text-decoration:none;">
+          더 읽기 →
+        </a>
+      </article>
       {% endif %}
     {% endfor %}
-  </ul>
+  </div>
+
 </div>
