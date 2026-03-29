@@ -232,12 +232,29 @@ layout: default
 
   .cat-tab:hover { color: rgba(255,255,255,0.85); }
 
+  /* 모바일: 2열 격자 */
   @media (max-width: 640px) {
-    .cat-tab {
-      font-size: 0.75rem;
-      padding: 10px 12px;
-      gap: 4px;
+    .category-nav {
+      overflow-x: visible;
     }
+    .category-nav-inner {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      padding: 0;
+    }
+    .cat-tab {
+      font-size: 0.78rem;
+      padding: 12px 8px;
+      gap: 5px;
+      white-space: normal;
+      justify-content: center;
+      text-align: center;
+      border-bottom: none;
+      border-right: 1px solid #222;
+      border-bottom: 1px solid #222;
+    }
+    .cat-tab:nth-child(2n) { border-right: none; }
+    .cat-tab:nth-last-child(-n+2) { border-bottom: none; }
   }
 
   /* 활성 탭 — 카테고리별 색상 */

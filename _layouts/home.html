@@ -67,6 +67,30 @@ layout: default
   .home-hero .hero-subtitle {
     animation: heroFadeUp 0.8s ease 0.15s both;
   }
+  .home-hero .hero-cta {
+    animation: heroFadeUp 0.8s ease 0.3s both;
+  }
+
+  /* CTA 버튼 */
+  .hero-cta {
+    position: relative;
+    z-index: 2;
+    display: inline-block;
+    margin-top: 20px;
+    padding: 12px 28px;
+    background: #1a73e8;
+    color: #fff !important;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: 30px;
+    transition: background 0.2s, transform 0.2s;
+    box-shadow: 0 4px 16px rgba(26,115,232,0.45);
+  }
+  .hero-cta:hover {
+    background: #1557b0;
+    transform: translateY(-2px);
+  }
 
   @keyframes heroFadeUp {
     from { opacity: 0; transform: translateY(20px); }
@@ -94,6 +118,7 @@ layout: default
 <div class="home-hero">
   <h1 class="hero-title" style="color:#ffffff !important;text-shadow:0 2px 20px rgba(0,0,0,0.8);">{{ site.title }}</h1>
   <p class="hero-subtitle" style="color:rgba(255,255,255,0.9) !important;">공장 자동화 · 딥러닝 비전 · 스마트팩토리 최신 기술 인사이트</p>
+  <a class="hero-cta" href="#post-grid" onclick="document.getElementById('post-grid')?.scrollIntoView({behavior:'smooth'}); return false;">최신 글 보기 →</a>
 </div>
 
 <!-- 통합 검색 + 카테고리 바 -->
