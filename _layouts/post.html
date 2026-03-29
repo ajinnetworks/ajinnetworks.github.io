@@ -298,6 +298,21 @@ layout: default
   }
 
   .post-tag:hover { border-color: var(--hero-accent); color: var(--hero-accent); }
+
+/* 본문 텍스트 가시성 강제 */
+.post-content, .post-content p, article p {
+  color: #333333 !important;
+}
+.post-content h1, .post-content h2, .post-content h3,
+.post-content h4, .post-content h5, .post-content h6 {
+  color: #1a1a1a !important;
+}
+/* 본문 배경 강제 흰색 */
+.post-content {
+  background: #ffffff;
+  padding: 32px;
+  border-radius: 12px;
+}
 </style>
 
 <!-- 카테고리 탭 네비게이션 -->
