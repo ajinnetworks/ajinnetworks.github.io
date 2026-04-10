@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="{{ page.lang | default: site.lang | default: 'ko' }}">
   <head>
-    <!-- redirect removed: CNAME handles ajinnetworks.github.io → blog.ajinnetworks.co.kr -->
+    <!-- redirect removed: CNAME handles ajinnetworks.github.io to blog.ajinnetworks.co.kr -->
     {%- include head.html -%}
     {% include seo-schema.html %}
     <title>
@@ -92,8 +92,12 @@ footer h3, footer h4 {
             <span>🏭 FA사업부: 경기도 평택시 청북읍 현곡산단로 29</span>
             <span>📞 010-4168-0472</span>
             <span>📠 FAX: 0504-419-0472</span>
-            <span>✉️ <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="2c5b4d5a491a1e186c424d5a495e024f4341">[email&#160;protected]</a></span>
+            <span>✉️ <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="98eff9eefdaeaaacd8f6f9eefdeab6fbf7f5">[email&#160;protected]</a></span>
             <span>🌐 <a href="https://www.ajinnetworks.co.kr" target="_blank">www.ajinnetworks.co.kr</a></span>
           </div>
         </div>
-        <p class="footer-copy">&copy; {{ site.ti
+        <p class="footer-copy">&copy; {{ site.time | date: '%Y' }} 아진네트웍스 주식회사. All rights reserved.</p>
+      </div>
+    </footer>
+</body>
+</html>
