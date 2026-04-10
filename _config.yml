@@ -55,9 +55,10 @@ kramdown:
 lang: ko
 timezone: Asia/Seoul
 
-# ── 네비게이션 ────────────────────────────────────
+# ── 네비게이션 메뉴 ───────────────────────────────
 header_pages:
   - about.md
+  - music.md
 
 # ── 빌드 제외 ─────────────────────────────────────
 exclude:
@@ -77,6 +78,6 @@ exclude:
 
 feed:
   posts_limit: 20
-  
-# ── Google Analytics ─────────────────────────
+
+# ── Google Analytics ─────────────────────────────
 google_analytics: G-RYPE4V64TJ
