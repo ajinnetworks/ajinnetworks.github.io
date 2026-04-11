@@ -276,17 +276,25 @@ layout: default
   /* ── 본문 래퍼 ── */
   .post-body-wrap {
     max-width: 780px;
-    margin: 48px auto;
+    margin: 48px auto 64px;
     padding: 0 24px;
-    color: #e0e0e0;
-    line-height: 1.85;
+    color: #202124;
+    line-height: 1.9;
     font-size: 1.02rem;
+  }
+
+  /* 모든 인라인 텍스트 요소 통일 */
+  .post-body-wrap p,
+  .post-body-wrap li,
+  .post-body-wrap td,
+  .post-body-wrap blockquote {
+    color: #202124;
   }
 
   .post-body-wrap h2 {
     font-size: 1.45rem;
     font-weight: 700;
-    color: #fff;
+    color: #0f0f1a;
     margin: 2.5em 0 0.8em;
     padding-left: 14px;
     border-left: 3px solid var(--hero-accent);
@@ -295,32 +303,101 @@ layout: default
   .post-body-wrap h3 {
     font-size: 1.15rem;
     font-weight: 600;
-    color: #ccc;
+    color: #1a1a2e;
     margin: 1.8em 0 0.5em;
   }
 
+  .post-body-wrap h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin: 1.4em 0 0.4em;
+  }
+
+  .post-body-wrap a {
+    color: var(--primary, #1a73e8);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(26,115,232,0.3);
+  }
+  .post-body-wrap a:hover {
+    border-bottom-color: var(--primary, #1a73e8);
+  }
+
+  .post-body-wrap strong { color: #0f0f1a; }
+
+  .post-body-wrap ul,
+  .post-body-wrap ol {
+    padding-left: 1.6em;
+    margin: 0.8em 0 1.2em;
+  }
+
+  .post-body-wrap li {
+    margin-bottom: 6px;
+  }
+
   .post-body-wrap code {
-    background: #1e1e1e;
-    border: 1px solid #333;
+    background: #f1f3f4;
+    border: 1px solid #e2e8f0;
     border-radius: 4px;
     padding: 2px 7px;
     font-size: 0.88em;
-    color: var(--hero-accent);
+    color: #d63384;
   }
 
   .post-body-wrap pre {
-    background: #141414;
-    border: 1px solid #2a2a2a;
+    background: #1e2030;
+    border: 1px solid #2a2d3e;
     border-radius: 10px;
     padding: 20px;
     overflow-x: auto;
+    margin: 1.4em 0;
   }
 
   .post-body-wrap pre code {
     background: none;
     border: none;
     padding: 0;
-    color: #e0e0e0;
+    color: #c9d1d9;
+    font-size: 0.9em;
+  }
+
+  .post-body-wrap blockquote {
+    border-left: 4px solid var(--hero-accent);
+    margin: 1.4em 0;
+    padding: 14px 20px;
+    background: #f8f9fa;
+    border-radius: 0 8px 8px 0;
+    color: #374151;
+    font-style: italic;
+  }
+
+  .post-body-wrap table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.4em 0;
+    font-size: 0.93rem;
+  }
+  .post-body-wrap th {
+    background: #f1f3f4;
+    color: #0f0f1a;
+    font-weight: 700;
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    text-align: left;
+  }
+  .post-body-wrap td {
+    padding: 9px 14px;
+    border: 1px solid #e2e8f0;
+    color: #202124;
+  }
+  .post-body-wrap tr:nth-child(even) td { background: #f8f9fa; }
+
+  .post-body-wrap img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 1em 0;
+    display: block;
   }
 
   /* ── 태그 ── */
@@ -329,69 +406,21 @@ layout: default
     flex-wrap: wrap;
     gap: 8px;
     margin-top: 48px;
-    padding-top: 32px;
-    border-top: 1px solid #222;
+    padding-top: 28px;
+    border-top: 1px solid #e2e8f0;
   }
 
   .post-tag {
-    background: #1a1a1a;
-    border: 1px solid #333;
-    color: #aaa;
+    background: #f1f3f4;
+    border: 1px solid #e2e8f0;
+    color: #5f6368;
     font-size: 0.78rem;
     padding: 4px 12px;
     border-radius: 100px;
     text-decoration: none;
     transition: border-color .2s, color .2s;
   }
-
   .post-tag:hover { border-color: var(--hero-accent); color: var(--hero-accent); }
-
-/* 본문 텍스트 가시성 강제 */
-.post-content h2, .post-content h3,
-.content h2, .content h3,
-article h2, article h3 {
-  color: #1a1a1a !important;
-  opacity: 1 !important;
-}
-/* 모바일 로고 사이즈 */
-@media (max-width: 768px) {
-  .site-logo img, .navbar-brand img, img.logo {
-    max-height: 32px !important;
-    width: auto !important;
-  }
-  .site-title {
-    font-size: 1rem !important;
-  }
-}
-.post-content, .post-content p, article p {
-  color: #333333 !important;
-}
-.post-content h1, .post-content h2, .post-content h3,
-.post-content h4, .post-content h5, .post-content h6 {
-  color: #1a1a1a !important;
-}
-/* 본문 배경 강제 흰색 */
-.post-content {
-  background: #ffffff;
-  padding: 32px;
-  border-radius: 12px;
-}
-
-/* 소제목 강제 가시성 */
-.post-content h2, .post-content h3, .post-content h4,
-.content h2, .content h3, article h2, article h3 {
-  color: #1a1a1a !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-/* 모바일 로고 */
-@media (max-width: 768px) {
-  img[src*="logo"], .site-logo img, .navbar-brand img {
-    max-height: 28px !important;
-    max-width: 120px !important;
-    width: auto !important;
-  }
-}
 
 </style>
 
@@ -446,19 +475,6 @@ article h2, article h3 {
       'linear-gradient(rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.78) 100%), url(' + imgUrl + ') center/cover no-repeat',
       'important'
     );
-  }
-  // 본문 텍스트 색상 강제
-  var content = document.querySelector('.post-content, .content, article .prose');
-  if (content) {
-    content.style.setProperty('color', '#333333', 'important');
-    var headings = content.querySelectorAll('h1,h2,h3,h4,h5,h6');
-    headings.forEach(function(h) {
-      h.style.setProperty('color', '#1a1a1a', 'important');
-    });
-    var paras = content.querySelectorAll('p');
-    paras.forEach(function(p) {
-      p.style.setProperty('color', '#333333', 'important');
-    });
   }
 })();
 </script>
