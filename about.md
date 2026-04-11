@@ -117,7 +117,7 @@ permalink: /about/
         <span class="info-icon">🏭</span>
         <div class="info-text">
           <strong>FA사업부</strong>
-          경기도 평택시 청북읍 현곡산단로 28-9
+          경기도 평택시 청북읍 현곡산단로 29
         </div>
       </div>
       <div class="info-item">
