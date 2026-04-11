@@ -1003,3 +1003,213 @@ body {
 div[class*="music-"] {
   background-image: none !important;
 }
+
+/* ══════════════════════════════════════
+   Music 페이지
+══════════════════════════════════════ */
+.music-hero {
+  background: linear-gradient(135deg, #0d0d1a 0%, #1a1040 50%, #0d0d1a 100%);
+  color: white;
+  text-align: center;
+  padding: 64px 24px 56px;
+  position: relative;
+  overflow: hidden;
+}
+.music-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 30% 50%, rgba(139,92,246,0.18) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 50%, rgba(236,72,153,0.12) 0%, transparent 60%);
+  pointer-events: none;
+}
+.music-hero-icon {
+  font-size: 56px;
+  display: block;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+}
+.music-hero h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 10px;
+  position: relative;
+  z-index: 1;
+}
+.music-hero p {
+  font-size: 1rem;
+  color: rgba(255,255,255,0.7);
+  position: relative;
+  z-index: 1;
+}
+
+.music-section {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+}
+
+.music-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  margin-top: 28px;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.2s;
+}
+.music-card:hover { box-shadow: var(--shadow-hover); }
+
+.music-card-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--heading);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.music-card-sub {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.music-info-grid {
+  background: var(--bg-subtle);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: grid;
+  gap: 8px;
+}
+.music-info-row {
+  font-size: 0.9rem;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.music-btn-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.music-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+  flex: 1;
+  justify-content: center;
+  min-width: 140px;
+}
+.music-btn:hover { transform: translateY(-2px); opacity: 0.92; }
+.music-btn-yt  { background: #ff0000; color: #fff; }
+.music-btn-blk { background: #111;    color: #fff; }
+.music-btn-grn { background: #1db954; color: #fff; }
+.music-btn-wht { background: #fff; color: #1db954; border: 2px solid #1db954; }
+
+.music-coming-soon {
+  background: linear-gradient(135deg, #1db954, #17a34a);
+  border-radius: var(--radius);
+  padding: 40px 28px;
+  text-align: center;
+  color: white;
+  margin-top: 28px;
+}
+.music-coming-soon h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 6px; }
+.music-coming-soon p  { font-size: 0.9rem; color: rgba(255,255,255,0.85); margin-bottom: 20px; }
+
+.music-links-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.music-links-list a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--primary);
+  font-size: 0.92rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+.music-links-list a:hover { text-decoration: underline; }
+
+@media (max-width: 640px) {
+  .music-hero h1 { font-size: 1.6rem; }
+  .music-btn { flex: 1 1 100%; }
+  .music-card { padding: 20px 16px; }
+}
+
+/* ══════════════════════════════════════
+   카테고리 인덱스 페이지
+══════════════════════════════════════ */
+.cat-index-hero {
+  text-align: center;
+  padding: 48px 24px 40px;
+}
+.cat-index-hero h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--heading);
+  margin-bottom: 8px;
+}
+.cat-index-hero p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.cat-index-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 24px 60px;
+}
+
+.cat-index-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-decoration: none;
+  display: block;
+  transition: all 0.2s;
+  box-shadow: var(--shadow);
+}
+.cat-index-card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-3px);
+  border-color: var(--primary);
+}
+.cat-index-icon { font-size: 2rem; margin-bottom: 12px; display: block; }
+.cat-index-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--heading);
+  margin-bottom: 6px;
+}
+.cat-index-count {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.cat-index-count strong { color: var(--primary); font-weight: 700; }
+
+@media (max-width: 640px) {
+  .cat-index-grid { grid-template-columns: 1fr 1fr; gap: 14px; padding: 0 16px 40px; }
+  .cat-index-hero h1 { font-size: 1.5rem; }
+}
