@@ -651,3 +651,19 @@ article {
 @media (max-width: 640px) {
   .related-grid { grid-template-columns: 1fr !important; }
 }
+
+/* Music 페이지 배경 강제 제거 */
+body {
+  &.page-music,
+  &[class*="music"] {
+    background-image: none !important;
+    background: white !important;
+  }
+}
+
+.music-page,
+.music-header,
+.music-container,
+div[class*="music-"] {
+  background-image: none !important;
+}
