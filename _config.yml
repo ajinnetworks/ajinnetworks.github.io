@@ -75,6 +75,16 @@ exclude:
   - prompts/
   - output/
   - tests/
+  - default_current.html
+  - home_current.html
+  - home_edit.html
+  - home_latest.html
+  - post_current.html
+  - BLOG_MANAGEMENT.md
+  - CLAUDE.md
+  - tomorrow_checklist.md
+  - sitemap.xml
+  - "post (1).html"
 
 feed:
   posts_limit: 20
