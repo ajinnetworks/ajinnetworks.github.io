@@ -1008,8 +1008,8 @@ div[class*="music-"] {
 
 /* 히어로: wrapper padding 무력화로 전체 너비 */
 .music-hero {
-  background: linear-gradient(135deg, #0d0d1a 0%, #1a1040 50%, #0d0d1a 100%);
-  color: white;
+  background: linear-gradient(135deg, #0d0d1a 0%, #1a1040 50%, #0d0d1a 100%) !important;
+  color: #ffffff !important;
   text-align: center;
   padding: 72px 32px 64px;
   position: relative;
@@ -1017,6 +1017,8 @@ div[class*="music-"] {
   margin-left: -24px;
   margin-right: -24px;
 }
+.music-hero h1 { color: #ffffff !important; }
+.music-hero p  { color: rgba(255,255,255,0.72) !important; }
 .music-hero::before {
   content: '';
   position: absolute;
