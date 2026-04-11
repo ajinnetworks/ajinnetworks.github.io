@@ -1006,36 +1006,25 @@ div[class*="music-"] {
    Music 페이지
 ══════════════════════════════════════ */
 
-/* 히어로: wrapper padding 무력화로 전체 너비 */
+/* 히어로: 밝은 그라디언트 + 어두운 텍스트 (고대비) */
 .music-hero {
-  background: linear-gradient(135deg, #0d0d1a 0%, #1a1040 50%, #0d0d1a 100%) !important;
-  color: #ffffff !important;
+  background: linear-gradient(135deg, #f0eeff 0%, #e8e0ff 40%, #fce4f4 100%);
+  color: #1a1a2e;
   text-align: center;
   padding: 72px 32px 64px;
   position: relative;
   overflow: hidden;
   margin-left: -24px;
   margin-right: -24px;
+  border-bottom: 1px solid #e2d9f3;
 }
-.music-hero h1 { color: #ffffff !important; }
-.music-hero p  { color: rgba(255,255,255,0.72) !important; }
 .music-hero::before {
   content: '';
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse at 25% 50%, rgba(139,92,246,0.22) 0%, transparent 55%),
-    radial-gradient(ellipse at 75% 50%, rgba(236,72,153,0.15) 0%, transparent 55%);
-  pointer-events: none;
-}
-.music-hero::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
+    radial-gradient(ellipse at 25% 50%, rgba(139,92,246,0.12) 0%, transparent 55%),
+    radial-gradient(ellipse at 75% 50%, rgba(236,72,153,0.08) 0%, transparent 55%);
   pointer-events: none;
 }
 .music-hero-icon {
@@ -1044,11 +1033,11 @@ div[class*="music-"] {
   margin-bottom: 20px;
   position: relative;
   z-index: 1;
-  filter: drop-shadow(0 0 24px rgba(139,92,246,0.6));
 }
 .music-hero h1 {
   font-size: 2.4rem;
   font-weight: 800;
+  color: #1a1a2e;
   margin-bottom: 12px;
   position: relative;
   z-index: 1;
@@ -1056,7 +1045,7 @@ div[class*="music-"] {
 }
 .music-hero p {
   font-size: 1rem;
-  color: rgba(255,255,255,0.65);
+  color: #4b4b6b;
   position: relative;
   z-index: 1;
   max-width: 480px;

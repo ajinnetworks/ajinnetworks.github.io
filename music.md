@@ -5,11 +5,11 @@ permalink: /music/
 description: "아진네트웍스의 음악 채널 Ajin Soft Rock Ballad — 80s-2000s 한국 소프트 록 & 발라드"
 ---
 
-<!-- 히어로: 다크 배경 인라인 강제 적용 -->
-<div class="music-hero" style="background:#0d0d1a;color:#fff;">
+<!-- 히어로: 밝은 그라디언트 + 어두운 텍스트 (고대비) -->
+<div class="music-hero">
   <span class="music-hero-icon">🎵</span>
-  <h1 style="color:#ffffff;">Ajin Soft Rock Ballad</h1>
-  <p style="color:rgba(255,255,255,0.7);">80s-2000s 한국 소프트 록 &amp; 발라드 &nbsp;·&nbsp; 아진네트웍스 음악 채널</p>
+  <h1>Ajin Soft Rock Ballad</h1>
+  <p>80s-2000s 한국 소프트 록 &amp; 발라드 &nbsp;·&nbsp; 아진네트웍스 음악 채널</p>
 </div>
 
 <div class="music-section">
