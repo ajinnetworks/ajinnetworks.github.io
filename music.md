@@ -8,7 +8,7 @@ description: "아진네트웍스 Ajin Soft Rock Ballad — 80s~2000s 감성 소�
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
-.music-page{max-width:440px;margin:0 auto;padding:0 0 2rem}
+.music-page{width:100%;max-width:440px;margin:0 auto;padding:0 0 2rem;box-sizing:border-box;overflow-x:hidden}
 .yt-section{background:#0d0d0f;border-radius:12px;padding:16px 20px;margin-bottom:16px;border:1px solid #222228}
 .yt-title{font-size:11px;color:#e8a030;letter-spacing:2px;font-family:'Space Mono',monospace;margin-bottom:10px}
 .yt-links{display:flex;flex-direction:column;gap:8px}
@@ -89,9 +89,8 @@ description: "아진네트웍스 Ajin Soft Rock Ballad — 80s~2000s 감성 소�
 .share-title{font-size:11px;color:#e8a030;letter-spacing:2px;font-family:'Space Mono',monospace;margin-bottom:10px}
 .share-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;background:#141416;border:1px solid #2a2a2e;border-radius:8px;text-decoration:none;font-family:'Space Mono',monospace;font-size:10px;color:#888;margin-right:8px;margin-bottom:8px;transition:border-color 0.15s,color 0.15s;cursor:pointer;border:1px solid #2a2a2e}
 .share-btn:hover{border-color:#e8a030;color:#e8a030}
-.music-page{width:100%;max-width:100vw;box-sizing:border-box;overflow-x:hidden}
 .ctrl button{min-width:44px;min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer}
-@media(max-width:768px){.music-page{padding:0 8px 2rem}.ctrl{gap:8px}}
+@media(max-width:768px){.music-page{padding:0 4px 2rem}.ctrl{gap:8px}.player-wrap{border-radius:8px}}
 </style>
 
 <div class="music-page">
@@ -381,20 +380,31 @@ function selT(i){playing=true;document.getElementById('playIcon').innerHTML='<pa
 function prevT(){if(tracks.length)selT((ci-1+tracks.length)%tracks.length);}
 function nextT(){if(tracks.length)selT((ci+1)%tracks.length);}
 function seek(s){const n=Math.max(0,aud.currentTime+s);aud.currentTime=n;curSec=n;updateProg();}
-document.getElementById('progBar').addEventListener('click',function(e){
-  if(!tracks[ci]||!tracks[ci].secs)return;
-  const r=this.getBoundingClientRect();
-  const t=Math.round((e.clientX-r.left)/r.width*tracks[ci].secs);
-  aud.currentTime=t;curSec=t;updateProg();
-});
+function clientX(e){return e.touches?e.touches[0].clientX:e.clientX;}
+(function(){
+  const pb=document.getElementById('progBar');
+  function seekAt(e){
+    if(!tracks[ci]||!tracks[ci].secs)return;
+    const r=pb.getBoundingClientRect();
+    const t=Math.round((clientX(e)-r.left)/r.width*tracks[ci].secs);
+    aud.currentTime=t;curSec=t;updateProg();
+  }
+  pb.addEventListener('click',seekAt);
+  pb.addEventListener('touchstart',function(e){e.preventDefault();seekAt(e);},{passive:false});
+})();
 function setVol(e){
   const r=document.getElementById('volTrack').getBoundingClientRect();
-  const v=Math.min(100,Math.max(0,Math.round((e.clientX-r.left)/r.width*100)));
+  const x=clientX(e);
+  const v=Math.min(100,Math.max(0,Math.round((x-r.left)/r.width*100)));
   document.getElementById('volFill').style.width=v+'%';
   document.getElementById('volThumb').style.left=v+'%';
   document.getElementById('volVal').textContent=v;
   aud.volume=v/100;
 }
+(function(){
+  const vt=document.getElementById('volTrack');
+  vt.addEventListener('touchstart',function(e){e.preventDefault();setVol(e);},{passive:false});
+})();
 function copyLink(){
   navigator.clipboard.writeText('https://blog.ajinnetworks.co.kr/music/')
     .then(()=>setSt('링크 복사됨','ok'))
@@ -441,7 +451,7 @@ function buildTrackSelect(){
   ).join('');
   sel.value=ci;
 }
-  
+
 /* MP3 URL 수동 등록 */
 function addAudio(){
   const idx=parseInt(document.getElementById('trackSel').value);
