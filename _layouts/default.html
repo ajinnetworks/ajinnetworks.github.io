@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="{{ page.lang | default: site.lang | default: 'ko' }}">
+<head>
+  {%- include head.html -%}
+  {% include seo-schema.html %}
+  <title>
+    {%- if page.title -%}{{ page.title }} | {{ site.title }}{%- else -%}{{ site.title }}{%- endif -%}
+  </title>
+  <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}?v={{ site.time | date: '%s' }}">
+  
+  <style>
+    /* 모바일 반응형 */
+    @media (max-width: 768px) {
+      .footer-logo img { 
+        max-width: 180px !important; 
+        width: 100% !important; 
+        height: auto !important; 
+      }
+      .site-footer { 
+        padding: 24px 16px !important; 
+      }
+      .footer-info-grid { 
+        grid-template-columns: 1fr !important; 
+      }
+      .footer-company { 
+        font-size: 0.9rem !important; 
+      }
+      footer img { 
+        max-width: 200px !important; 
+        width: 100% !important; 
+        height: auto !important; 
+      }
+    }
+    
+    /* 본문 텍스트 색상 강제 */
+    .post-content p, .content p, article p,
+    .post-body p, main p { 
+      color: #222222 !important; 
+    }
+    .post-content li, .content li, article li,
+    .post-body li, main li { 
+      color: #333333 !important; 
+    }
+    .post-content h2, .post-content h3, .post-content h4,
+    .content h2, .content h3, article h2, article h3,
+    main h2, main h3 { 
+      color: #111111 !important; 
+      font-weight: 700 !important; 
+    }
+    
+    @media (max-width: 768px) {
+      body { color: #222222 !important; }
+      p, li { color: #333333 !important; }
+      h1, h2, h3, h4 { color: #111111 !important; }
+    }
+    
+    /* 모바일 히어로 타이틀 — 줄바꿈 허용 */
+    @media (max-width: 768px) {
+      .hero-title {
+        font-size: clamp(1.1rem, 3.8vw, 1.8rem) !important;
+        white-space: normal !important;
+        overflow-wrap: break-word !important;
+        word-break: keep-all !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+        padding: 0 12px !important;
+      }
+      .hero-subtitle {
+        font-size: 0.85rem !important;
+        white-space: normal !important;
+        overflow-wrap: break-word !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+      }
+    }
+    
+    /* 푸터 텍스트 강제 흰색 */
+    footer, .site-footer,
+    footer *, .site-footer *,
+    footer p, footer span, footer a,
+    .footer-company, .footer-copy,
+    footer h3, footer h4 {
+      color: #ffffff !important;
+      opacity: 1 !important;
+    }
+    .footer-copy { 
+      color: rgba(255, 255, 255, 0.85) !important; 
+    }
+    
+    /* 이메일 안티스팸 처리 */
+    #footer-email {
+      unicode-bidi: bidi-override;
+      direction: rtl;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 읽기 진행 바 -->
+  <div id="reading-progress"></div>
+  
+  <!-- 상단으로 버튼 -->
+  <button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="맨 위로">↑</button>
+  
+  {%- include header.html -%}
+  
+  <main class="page-content" aria-label="Content">
+    <div class="wrapper">
+      {{ content }}
+    </div>
+  </main>
+  
+  <footer class="site-footer">
+    <div class="wrapper">
+      <div class="footer-company">
+        <div class="footer-logo" style="text-align:center; margin-bottom:15px; padding:0 16px;">
+          <picture>
+            <source srcset="{{ '/assets/images/ajin_logo_footer_white.webp' | relative_url }}" type="image/webp">
+            <img src="{{ '/assets/images/ajin_logo_footer_white.png' | relative_url }}" 
+                 style="max-width:200px; width:100%; height:auto;"
+                 alt="아진네트웍스(주) 로고"
+                 loading="lazy"
+                 width="389" 
+                 height="70">
+          </picture>
+        </div>
+        
+        <p class="footer-company-name">아진네트웍스 주식회사 | AJIN NETWORKS Co., Ltd.</p>
+        
+        <div class="footer-info-grid">
+          <span>📍 본사: 경기도 시흥시 금오로212번길 19-1</span>
+          <span>🏭 FA사업부: 경기도 평택시 청북읍 현곡산단로 29</span>
+          <span>📞 010-4168-0472</span>
+          <span>📠 FAX: 0504-419-0472</span>
+          <span>🌐 <a href="https://www.ajinnetworks.co.kr" target="_blank" rel="noopener">www.ajinnetworks.co.kr</a></span>
+        </div>
+      </div>
+      
+      <p class="footer-copy">&copy; {{ site.time | date: '%Y' }} 아진네트웍스 주식회사. All rights reserved.</p>
+    </div>
+  </footer>
+  
+  <script>
+    // 읽기 진행 바
+    (function() {
+      var progressBar = document.getElementById('reading-progress');
+      if (progressBar) {
+        window.addEventListener('scroll', function() {
+          var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+          var scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+          var progress = (scrollTop / scrollHeight) * 100;
+          progressBar.style.width = progress + '%';
+        });
+      }
+    })();
+    
+    // 상단으로 버튼
+    (function() {
+      var btn = document.getElementById('back-to-top');
+      if (btn) {
+        window.addEventListener('scroll', function() {
+          if (window.pageYOffset > 300) {
+            btn.style.display = 'block';
+          } else {
+            btn.style.display = 'none';
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
