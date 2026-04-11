@@ -1,117 +1,23 @@
 <header class="site-header">
   <div class="wrapper">
-    <a class="site-title" href="{{ '/' | relative_url }}">
-      <img src="{{ '/assets/images/ajin_logo.png' | relative_url }}" alt="{{ site.title }}">
-      {{ site.title }}
+    <a class="nav-logo" href="{{ '/' | relative_url }}">
+      <picture>
+        <source srcset="{{ '/assets/images/ajin_logo.webp' | relative_url }}" type="image/webp">
+        <img src="{{ '/assets/images/ajin_logo.png' | relative_url }}"
+             alt="아진네트웍스 로고"
+             width="120" height="40">
+      </picture>
+      <span class="nav-logo-text">아진기술블로그</span>
     </a>
 
-    <nav class="site-nav">
-      <input type="checkbox" id="nav-trigger" class="nav-trigger" />
-      <label for="nav-trigger">
-        <span class="menu-icon">
-          <svg viewBox="0 0 18 15" width="18px" height="15px">
-            <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
-          </svg>
-        </span>
-      </label>
-
-      <div class="trigger">
-        <a class="page-link" href="{{ '/' | relative_url }}">홈</a>
-        <a class="page-link" href="{{ '/category/' | relative_url }}">카테고리</a>
-        <a class="page-link" href="{{ '/about/' | relative_url }}">기술자료</a>
-        <a class="page-link" href="{{ '/music/' | relative_url }}">🎵 Music</a>
-      </div>
-    </nav>
+    <div class="nav-right">
+      <nav class="nav-links" id="nav-links">
+        <a href="{{ '/' | relative_url }}">홈</a>
+        <a href="{{ '/category/' | relative_url }}">카테고리</a>
+        <a href="{{ '/about/' | relative_url }}">기술자료</a>
+        <a href="{{ '/music/' | relative_url }}" class="nav-cta">🎵 Music</a>
+      </nav>
+      <button class="nav-hamburger" onclick="toggleMobileMenu()" aria-label="메뉴">☰</button>
+    </div>
   </div>
 </header>
-
-<style>
-/* 모바일 네비게이션 강제 표시 */
-@media screen and (max-width: 768px) {
-  .site-nav {
-    position: absolute;
-    top: 9px;
-    right: 15px;
-    background-color: #fdfdfd;
-    border: 1px solid #e8e8e8;
-    border-radius: 5px;
-    text-align: right;
-  }
-
-  .site-nav label[for="nav-trigger"] {
-    display: block;
-    float: right;
-    width: 36px;
-    height: 36px;
-    z-index: 2;
-    cursor: pointer;
-  }
-
-  .site-nav .menu-icon {
-    display: block;
-    float: right;
-    width: 36px;
-    height: 26px;
-    line-height: 0;
-    padding-top: 10px;
-    text-align: center;
-  }
-
-  .site-nav .menu-icon > svg {
-    fill: #424242;
-  }
-
-  .site-nav input:checked ~ .trigger {
-    display: block;
-    padding-bottom: 5px;
-  }
-
-  .site-nav .trigger {
-    clear: both;
-    display: none;
-  }
-
-  .site-nav .page-link {
-    display: block;
-    padding: 5px 10px;
-    margin-left: 20px;
-  }
-
-  .site-nav .page-link:not(:last-child) {
-    margin-right: 0;
-  }
-}
-
-/* 데스크탑 네비게이션 */
-@media screen and (min-width: 769px) {
-  .site-nav {
-    float: right;
-    line-height: 54px;
-  }
-
-  .site-nav .nav-trigger {
-    display: none;
-  }
-
-  .site-nav .menu-icon {
-    display: none;
-  }
-
-  .site-nav .trigger {
-    display: block;
-  }
-
-  .site-nav .page-link {
-    color: #111;
-    line-height: 1.5;
-    display: inline-block;
-    padding: 5px 10px;
-    margin-left: 20px;
-  }
-
-  .site-nav .page-link:hover {
-    text-decoration: none;
-    opacity: 0.7;
-  }
-}
-</style>

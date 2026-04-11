@@ -24,6 +24,10 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Minima 기본 스타일 오버라이드 — 로고 이미지 크기 방지 */
+.site-title img { max-height: 40px; width: auto; display: inline-block; }
+.site-header { background: #ffffff !important; background-image: none !important; }
+
 body {
   font-family: var(--font);
   font-size: 16px;
