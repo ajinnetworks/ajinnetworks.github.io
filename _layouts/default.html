@@ -1,6 +1,67 @@
 <!DOCTYPE html>
 <html lang="{{ page.lang | default: site.lang | default: 'ko' }}">
 <head>
+  <!-- ========================================
+       Music 페이지 배경 이미지 강제 제거 (최우선)
+       ======================================== -->
+  <style>
+    /* 모든 배경 이미지 강제 제거 */
+    body::before,
+    body::after,
+    main::before,
+    main::after,
+    .page-content::before,
+    .page-content::after,
+    .wrapper::before,
+    .wrapper::after,
+    div::before,
+    div::after,
+    section::before,
+    section::after {
+      display: none !important;
+      content: none !important;
+      background: none !important;
+      background-image: none !important;
+    }
+    
+    body,
+    html,
+    main,
+    .page-content,
+    .wrapper,
+    div,
+    section,
+    article,
+    * {
+      background-image: none !important;
+    }
+    
+    /* Music 페이지 전용 강제 배경 제거 */
+    body[class*="music"],
+    body.page-music,
+    .page-music,
+    .page-music *,
+    .music-page,
+    .music-page *,
+    .music-container,
+    .music-container *,
+    .music-header,
+    .music-header *,
+    div[class*="music"],
+    div[class*="music"] * {
+      background: white !important;
+      background-image: none !important;
+    }
+    
+    /* 전역 안전장치 */
+    * {
+      max-width: 100vw !important;
+    }
+  </style>
+  
+  <!-- ========================================
+       기본 메타 태그
+       ======================================== -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -15,7 +76,9 @@
   <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}?v={{ site.time | date: '%s' }}">
   
   <style>
-    /* 읽기 진행 바 */
+    /* ========================================
+       읽기 진행 바
+       ======================================== */
     #reading-progress {
       position: fixed;
       top: 0;
@@ -27,7 +90,9 @@
       transition: width 0.1s ease;
     }
     
-    /* 상단으로 버튼 */
+    /* ========================================
+       상단으로 버튼
+       ======================================== */
     #back-to-top {
       position: fixed;
       bottom: 2rem;
@@ -52,7 +117,9 @@
       box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
     }
     
-    /* 모바일 반응형 */
+    /* ========================================
+       모바일 반응형
+       ======================================== */
     @media (max-width: 768px) {
       .footer-logo img {
         max-width: 180px !important;
@@ -86,7 +153,9 @@
       }
     }
     
-    /* 본문 텍스트 색상 강제 */
+    /* ========================================
+       본문 텍스트 색상 강제
+       ======================================== */
     .post-content p, .content p, article p,
     .post-body p, main p {
       color: #222222 !important;
@@ -118,7 +187,9 @@
       }
     }
     
-    /* 모바일 히어로 타이틀 — 줄바꿈 허용 */
+    /* ========================================
+       모바일 히어로 타이틀 — 줄바꿈 허용
+       ======================================== */
     @media (max-width: 768px) {
       .hero-title {
         font-size: clamp(1.1rem, 3.8vw, 1.8rem) !important;
@@ -139,7 +210,9 @@
       }
     }
     
-    /* 푸터 텍스트 강제 흰색 */
+    /* ========================================
+       푸터 텍스트 강제 흰색
+       ======================================== */
     footer, .site-footer,
     footer *, .site-footer *,
     footer p, footer span, footer a,
@@ -153,14 +226,15 @@
       color: rgba(255, 255, 255, 0.85) !important;
     }
     
-    /* 푸터 링크 호버 */
     footer a:hover,
     .site-footer a:hover {
       opacity: 0.8 !important;
       text-decoration: underline !important;
     }
     
-    /* 푸터 정보 그리드 */
+    /* ========================================
+       푸터 정보 그리드
+       ======================================== */
     .footer-info-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -234,7 +308,40 @@
   
   <!-- JavaScript -->
   <script>
+    // ========================================
+    // Music 페이지 배경 강제 제거 (JavaScript)
+    // ========================================
+    (function() {
+      function forceRemoveBackgrounds() {
+        // 모든 요소 선택
+        var allElements = document.querySelectorAll('*');
+        
+        // 배경 제거
+        for (var i = 0; i < allElements.length; i++) {
+          var el = allElements[i];
+          var computed = window.getComputedStyle(el);
+          
+          // 배경 이미지가 있으면 제거
+          if (computed.backgroundImage && computed.backgroundImage !== 'none') {
+            el.style.backgroundImage = 'none';
+          }
+        }
+      }
+      
+      // 페이지 로드 시
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', forceRemoveBackgrounds);
+      } else {
+        forceRemoveBackgrounds();
+      }
+      
+      // 추가 안전장치: 1초 후 재실행
+      setTimeout(forceRemoveBackgrounds, 1000);
+    })();
+    
+    // ========================================
     // 읽기 진행 바
+    // ========================================
     (function() {
       var progressBar = document.getElementById('reading-progress');
       if (progressBar) {
@@ -247,7 +354,9 @@
       }
     })();
     
+    // ========================================
     // 상단으로 버튼
+    // ========================================
     (function() {
       var btn = document.getElementById('back-to-top');
       if (btn) {
