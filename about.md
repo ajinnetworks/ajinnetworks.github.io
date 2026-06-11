@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: page
 title: "아진네트웍스(주) 소개"
 description: "공장자동화·딥러닝 비전·스마트팩토리 전문기업 아진네트웍스 주식회사 소개"
 permalink: /about/
