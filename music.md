@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: page
 title: Music
 permalink: /music/
 description: "아진네트웍스의 음악 채널 Ajin Soft Rock Ballad — 80s-2000s 한국 소프트 록 & 발라드"
