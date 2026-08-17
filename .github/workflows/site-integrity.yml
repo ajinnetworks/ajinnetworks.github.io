@@ -20,6 +20,9 @@ jobs:
           ruby-version: '3.2'
           bundler-cache: true
 
+      - name: Audit legacy post quality
+        run: python3 scripts/audit_posts.py
+
       - name: Build Jekyll site
         run: bundle exec jekyll build --trace
 
