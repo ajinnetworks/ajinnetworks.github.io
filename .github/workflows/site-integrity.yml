@@ -23,6 +23,9 @@ jobs:
       - name: Audit legacy post quality
         run: python3 scripts/audit_posts.py
 
+      - name: Rank Phase 3.2 SEO rehabilitation
+        run: python3 scripts/rank_seo_rehabilitation.py
+
       - name: Build Jekyll site
         run: bundle exec jekyll build --trace
 
