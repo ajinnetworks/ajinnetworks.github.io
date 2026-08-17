@@ -1,5 +1,5 @@
 """Regression checks for Phase 3.2-B commercial reranking."""
-from commercial_rerank import evaluate
+from commercial_rerank import evaluate, select_balanced_priority
 from pathlib import Path
 import tempfile
 
@@ -24,8 +24,21 @@ for bad_title in (
     rb = evaluate(write_post(bad_title))
     assert rb['decision'] == 'EXCLUDE_TREND_JACKING', (bad_title, rb)
 
-# Generic policy/current-affairs framing without strong buyer intent must not outrank direct engineering topics.
 weak = evaluate(write_post('정부 주도 스마트팩토리 정책 분석', meta='시장 전망과 정책 분석', body='스마트팩토리 산업 동향과 정책 분석'))
 assert weak['decision'] in ('LOW_COMMERCIAL_RELEVANCE','P3_REVIEW'), weak
+
+# High scoring posts from one topic family must not monopolize the first-pass priority set.
+rows=[]
+for i in range(8):
+    rows.append({'score':100-i,'intent':30,'tech_primary':40,'file':f'l{i}.md','cluster':'logistics'})
+for i in range(5):
+    rows.append({'score':90-i,'intent':25,'tech_primary':35,'file':f'v{i}.md','cluster':'vision'})
+for i in range(5):
+    rows.append({'score':88-i,'intent':24,'tech_primary':34,'file':f'r{i}.md','cluster':'robotics'})
+selected=select_balanced_priority(rows, limit=12, per_cluster=4)
+from collections import Counter
+counts=Counter(x['cluster'] for x in selected)
+assert counts['logistics'] <= 4 and counts['vision'] <= 4 and counts['robotics'] <= 4, counts
+assert len(counts) >= 3, counts
 
 print('PHASE3.2-B COMMERCIAL RERANK TESTS: PASS')
