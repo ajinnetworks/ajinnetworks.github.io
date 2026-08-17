@@ -6,6 +6,29 @@
       {%- if page.title -%}{{ page.title }} | {{ site.title }}{%- else -%}{{ site.title }}{%- endif -%}
     </title>
     <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
+
+    {%- assign phase2_image = page.og_image | default: page.image -%}
+    {%- if phase2_image -%}
+    <!-- Phase 2: post-specific image for social preview and hero -->
+    <meta property="og:image" content="{{ phase2_image | absolute_url }}">
+    <meta property="og:image:alt" content="{{ page.image_alt | default: page.title | escape }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="{{ phase2_image | absolute_url }}">
+    <meta name="twitter:image:alt" content="{{ page.image_alt | default: page.title | escape }}">
+    <style>
+      .post-hero {
+        background-image:
+          linear-gradient(rgba(5, 12, 24, 0.62), rgba(5, 12, 24, 0.76)),
+          url('{{ page.image | default: phase2_image | relative_url }}') !important;
+        background-size: cover !important;
+        background-position: center center !important;
+        background-repeat: no-repeat !important;
+      }
+      .post-hero::before {
+        opacity: 0.42;
+      }
+    </style>
+    {%- endif -%}
 </head>
   <body>
     <!-- 읽기 진행 바 -->
