@@ -1,6 +1,6 @@
 ---
-title: 기아 오토랜드의 미래 전략: E-FOREST와 PBV 스마트팩토리 혁신 분석
-meta_description: 기아 오토랜드 광명 EVO Plant의 지능형 생산 시스템 'E-FOREST'를 분석합니다. PBV 전용 생산 라인에 도입된 AI, 로봇, 물류 자동화 기술의 핵심을 살펴보세요.
+title: "기아 오토랜드의 미래 전략: E-FOREST와 PBV 스마트팩토리 혁신 분석"
+meta_description: "기아 오토랜드 광명 EVO Plant의 지능형 생산 시스템 'E-FOREST'를 분석합니다. PBV 전용 생산 라인에 도입된 AI, 로봇, 물류 자동화 기술의 핵심을 살펴보세요."
 tags: ['기아오토랜드', '스마트팩토리', 'E-FOREST', 'PBV', '공장자동화', '로봇기술']
 category: 스마트팩토리
 generated_at: 2026-03-28T15:01:05.226499
