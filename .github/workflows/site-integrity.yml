@@ -29,6 +29,9 @@ jobs:
       - name: Re-rank B2B commercial priority
         run: python3 scripts/commercial_rerank.py
 
+      - name: Test B2B commercial rerank
+        run: python3 scripts/test_commercial_rerank.py
+
       - name: Build Jekyll site
         run: bundle exec jekyll build --trace
 
