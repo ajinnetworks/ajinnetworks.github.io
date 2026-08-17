@@ -26,6 +26,9 @@ jobs:
       - name: Rank Phase 3.2 SEO rehabilitation
         run: python3 scripts/rank_seo_rehabilitation.py
 
+      - name: Re-rank B2B commercial priority
+        run: python3 scripts/commercial_rerank.py
+
       - name: Build Jekyll site
         run: bundle exec jekyll build --trace
 
