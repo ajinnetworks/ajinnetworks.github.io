@@ -76,6 +76,15 @@ Discrete I/O는 단순하고 진단이 쉽지만 대량 데이터 전송에는 �
 
 Tag Naming, I/O List, Signal Matrix, Alarm Code, Robot Program Number, Vision Job Number, Recipe ID를 서로 연결하면 문제 추적이 쉬워집니다. 변경 이력과 Backup 기준도 설비 인수 문서에 포함해야 합니다.
 
+## 관련 기술 Cluster
+
+- [SCADA·HMI 아키텍처 실무]({% post_url 2026-08-18-SCADAHMI-아키텍처-완전-정복-아진네트웍스-기술팀-해설 %})
+- [레거시 PLC 마이그레이션 가이드]({% post_url 2026-08-18-레거시-PLC-마이그레이션-가이드-아진네트웍스-해설 %})
+
+## 기술검토·RFQ 요청
+
+통합제어 RFQ에는 **I/O List, Robot 모델, Vision 구성, Network 구성도, Sequence, Alarm List, 목표 Cycle, Safety 범위, 기존 Source 접근 여부**를 포함하면 인터페이스와 책임경계를 빠르게 정의할 수 있습니다.
+
 ## 결론
 
 Robot + PLC + Vision 통합의 핵심은 장비를 연결하는 것이 아니라 **공정 State와 데이터의 소유권, 신호 수명주기, 좌표계, Fault Recovery를 하나의 제어 아키텍처로 설계하는 것**입니다. 아진네트웍스는 기구·전장·PLC·Robot·Vision을 분리 발주 관점이 아닌 통합 Cell 관점에서 검토합니다.
