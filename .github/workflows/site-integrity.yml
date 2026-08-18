@@ -32,6 +32,9 @@ jobs:
       - name: Test B2B commercial rerank
         run: python3 scripts/test_commercial_rerank.py
 
+      - name: Test Phase 3-6 conversion measurement
+        run: python3 scripts/test_conversion_measurement.py
+
       - name: Build Jekyll site
         run: bundle exec jekyll build --trace
 
