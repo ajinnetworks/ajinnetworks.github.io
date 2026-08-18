@@ -78,6 +78,15 @@ Grip 실패 시 낙하를 방지하는 기계적 구속, Grip Confirm Sensor, �
 
 FAT에서는 Dry Cycle, 제품 반복 Pick/Place, Grip Fail, Vision NG, Sensor Fault, Emergency Stop 후 복구를 확인합니다. SAT에서는 실제 Conveyor와 열처리 설비를 포함한 연속운전, Cycle, 적재 위치, Alarm Recovery, 생산품 Changeover를 검증합니다.
 
+## 관련 기술 Cluster
+
+- [협동로봇 픽앤플레이스 도입 전 확인할 5가지]({% post_url 2026-05-19-협동-로봇-픽앤플레이스-도입-전-확인할-5가지-아진네트웍스 %})
+- [레거시 PLC 마이그레이션 가이드]({% post_url 2026-08-18-레거시-PLC-마이그레이션-가이드-아진네트웍스-해설 %})
+
+## 기술검토·RFQ 요청
+
+현장 검토 시 **제품도면, 제품중량/무게중심, 로봇 모델, EOAT 현황, I/O List, PLC/Robot 프로그램 접근 가능 여부, 기존 Layout, 목표 Cycle, 허용 정지시간**을 준비하면 개조 Scope와 리스크를 빠르게 정의할 수 있습니다.
+
 ## 결론
 
 자동차 열처리 로봇 자동화의 성패는 로봇 자체보다 **기존설비 인터페이스와 EOAT, 적재 기준, Vision 좌표, PLC–Robot Handshake를 얼마나 정확히 정의하느냐**에 달려 있습니다. 아진네트웍스는 현장조사 → Interface 정의 → 3D EOAT 설계 → 제어 검토 → Teaching → SAT의 순서로 Brownfield 자동화 개조를 검토합니다.
