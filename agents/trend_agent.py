@@ -53,7 +53,7 @@ def _gemini_http_status(error: Exception) -> int | None:
         if 100 <= status <= 599:
             return status
 
-    match = re.search(r"\\b(400|401|403|404|429)\\b", str(error))
+    match = re.search(r"\b(400|401|403|404|429)\b", str(error))
     return int(match.group(1)) if match else None
 
 
