@@ -13,11 +13,14 @@ from google import genai as google_genai
 import requests
 import yaml
 
-# 모델 우선순위 (한도 초과 시 자동 전환)
+# 안정 버전 모델만 사용. 필요하면 Actions 변수 GEMINI_MODELS로 쉼표 구분 재정의.
 GEMINI_MODELS = [
-    "gemini-2.0-flash",       # 1순위
-    "gemini-2.0-flash-lite",  # 2순위 (경량, 429 대비)
-    "gemini-flash-latest",    # 3순위 (최신 alias)
+    model.strip()
+    for model in os.environ.get(
+        "GEMINI_MODELS",
+        "gemini-3.8-flash,gemini-3.5-flash-lite",
+    ).split(",")
+    if model.strip()
 ]
 
 import io
@@ -37,26 +40,85 @@ from agents.writer_agent import is_valid_topic, EXCLUDE_KEYWORDS
 logger = logging.getLogger(__name__)
 
 
+def _gemini_http_status(error: Exception) -> int | None:
+    """google-genai 오류에서 HTTP 상태 코드를 가능한 한 구조적으로 추출."""
+    import re
+
+    for attribute in ("code", "status_code", "status"):
+        value = getattr(error, attribute, None)
+        try:
+            status = int(value)
+        except (TypeError, ValueError):
+            continue
+        if 100 <= status <= 599:
+            return status
+
+    match = re.search(r"\\b(400|401|403|404|429)\\b", str(error))
+    return int(match.group(1)) if match else None
+
+
 def get_gemini_response(prompt: str) -> str:
-    """GEMINI_MODELS 순서대로 시도, 429/404 시 다음 모델로 전환. 전체 실패 시 60초 대기 후 1회 재시도."""
+    """사용 가능한 모델을 순회하고, 429 응답만 한 번 제한 재시도."""
     import time
-    client = google_genai.Client(api_key=os.environ["GEMINI_API_KEY"])
-    for retry in range(2):
+
+    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if not api_key:
+        raise RuntimeError("GEMINI_API_KEY가 비어 있습니다.")
+
+    if not GEMINI_MODELS:
+        raise RuntimeError("GEMINI_MODELS에 사용할 모델이 지정되지 않았습니다.")
+
+    client = google_genai.Client(api_key=api_key)
+    unavailable_models: set[str] = set()
+    rate_limited_models: set[str] = set()
+    last_errors: dict[str, str] = {}
+
+    for attempt in range(2):
+        attempted_rate_limited_model = False
         for model_name in GEMINI_MODELS:
+            if model_name in unavailable_models:
+                continue
+            if attempt == 1 and model_name not in rate_limited_models:
+                continue
+
             try:
                 response = client.models.generate_content(model=model_name, contents=prompt)
+                text = (response.text or "").strip()
+                if not text:
+                    raise RuntimeError(f"{model_name}에서 빈 응답을 받았습니다.")
                 logger.info(f"[MODEL] {model_name} 사용")
-                return response.text.strip()
-            except Exception as e:
-                err = str(e)
-                if "429" in err or "quota" in err.lower() or "ResourceExhausted" in type(e).__name__ or "404" in err:
-                    logger.warning(f"[WARN] {model_name} 사용 불가 -> 다음 모델 시도")
+                return text
+            except Exception as error:
+                status = _gemini_http_status(error)
+                last_errors[model_name] = f"HTTP {status or 'unknown'}: {error}"
+                if status == 404:
+                    unavailable_models.add(model_name)
+                    logger.error(
+                        "[MODEL NOT FOUND] %s: %s — 이 모델은 재시도하지 않습니다.",
+                        model_name,
+                        error,
+                    )
                     continue
-                raise
-        if retry == 0:
-            logger.warning("[RATE LIMIT] 모든 모델 한도 초과 -> 65초 대기 후 재시도")
+                if status == 429 or type(error).__name__ == "ResourceExhausted":
+                    rate_limited_models.add(model_name)
+                    attempted_rate_limited_model = True
+                    logger.warning("[RATE LIMIT] %s 호출 제한: %s", model_name, error)
+                    continue
+                raise RuntimeError(
+                    f"Gemini 요청 실패 (model={model_name}, HTTP {status or 'unknown'}): {error}"
+                ) from error
+
+        if attempt == 0 and attempted_rate_limited_model:
+            logger.warning("[RATE LIMIT] 429 모델만 65초 후 1회 재시도합니다.")
             time.sleep(65)
-    raise RuntimeError("429 모든 Gemini 모델 한도 초과 (재시도 후)")
+            continue
+        break
+
+    if rate_limited_models:
+        detail = "; ".join(last_errors[m] for m in rate_limited_models)
+        raise RuntimeError(f"Gemini 모델 호출 한도 초과 (429, 1회 재시도 후): {detail}")
+    detail = "; ".join(last_errors.values()) or "시도 가능한 모델이 없습니다."
+    raise RuntimeError(f"사용 가능한 Gemini 모델을 찾지 못했습니다. 모델 ID와 API 접근 권한을 확인하세요: {detail}")
 
 
 def load_config() -> dict:
