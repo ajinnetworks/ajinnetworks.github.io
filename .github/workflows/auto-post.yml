@@ -23,11 +23,15 @@ jobs:
   auto-post:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    concurrency:
+      group: auto-blog-post-${{ github.repository }}
+      cancel-in-progress: false
     env:
       BLOG_GITHUB_TOKEN: ${{ secrets.BLOG_GITHUB_TOKEN }}
       BLOG_REPO: ajinnetworks/ajinnetworks.github.io
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      GEMINI_MODELS: ${{ vars.GEMINI_MODELS }}
+      HUMAN_GATE: "false"
       PYTHONUTF8: "1"
       PYTHONIOENCODING: "utf-8"
       LOG_LEVEL: "INFO"
@@ -44,26 +48,13 @@ jobs:
 
       - name: 의존성 설치
         run: |
-          pip install anthropic PyGithub python-frontmatter requests PyYAML python-dotenv schedule google-genai
-
-      - name: .env 파일 생성
-        run: |
-          cat > .env << EOF
-          ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
-          BLOG_GITHUB_TOKEN=${{ secrets.BLOG_GITHUB_TOKEN }}
-          GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
-          BLOG_REPO=ajinnetworks/ajinnetworks.github.io
-          HUMAN_GATE=false
-          LOG_LEVEL=INFO
-          PYTHONUTF8=1
-          PYTHONIOENCODING=utf-8
-          EOF
+          pip install PyGithub python-frontmatter requests PyYAML python-dotenv schedule google-genai
 
       - name: 블로그 포스트 자동 생성 및 발행
         run: |
           MODE="${{ github.event.inputs.mode || 'once' }}"
           echo "실행 모드: $MODE"
-          python scripts/run_agent.py --mode $MODE --platform github
+          python scripts/run_agent.py --mode "$MODE" --platform github
 
       - name: 실행 로그 업로드
         if: always()

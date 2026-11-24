@@ -6,12 +6,9 @@ Evaluator AI 역할: 오류·누락·요구사항 미반영 점검
 
 import json
 import logging
-import os
-import time
-from functools import wraps
 from pathlib import Path
 
-from google import genai as google_genai
+from agents.gemini_client import get_gemini_response
 import yaml
 
 import io
@@ -28,69 +25,6 @@ if sys.stderr.encoding != 'utf-8':
 
 logger = logging.getLogger(__name__)
 
-def retry_on_rate_limit(max_retries: int = 3, wait_seconds: int = 60):
-    """429/quota 오류 시 지수 대기 후 재시도 데코레이터."""
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            for attempt in range(max_retries):
-                try:
-                    return func(*args, **kwargs)
-                except Exception as e:
-                    is_rate_limit = (
-                        "429" in str(e)
-                        or "quota" in str(e).lower()
-                        or "ResourceExhausted" in type(e).__name__
-                    )
-                    if is_rate_limit:
-                        if attempt < max_retries - 1:
-                            wait = wait_seconds * (attempt + 1)
-                            print(f"[RATE LIMIT] {wait}초 대기 후 재시도 ({attempt + 1}/{max_retries})")
-                            time.sleep(wait)
-                        else:
-                            print("[RATE LIMIT] 재시도 한도 초과 — 건너뜀")
-                            return {
-                                "pass": False,
-                                "total_score": 0,
-                                "breakdown": {},
-                                "issues": [],
-                                "revision_notes": "API 한도 초과로 검수 불가",
-                            }
-                    else:
-                        raise
-        return wrapper
-    return decorator
-
-
-# 모델 우선순위 (한도 초과 시 자동 전환)
-GEMINI_MODELS = [
-    "gemini-2.0-flash",       # 1순위
-    "gemini-2.0-flash-lite",  # 2순위 (경량, 429 대비)
-    "gemini-flash-latest",    # 3순위 (최신 alias)
-]
-
-
-def get_gemini_response(prompt: str) -> str:
-    """GEMINI_MODELS 순서대로 시도, 429/404 시 다음 모델로 전환. 전체 실패 시 60초 대기 후 1회 재시도."""
-    client = google_genai.Client(api_key=os.environ["GEMINI_API_KEY"])
-    for retry in range(2):
-        for model_name in GEMINI_MODELS:
-            try:
-                response = client.models.generate_content(model=model_name, contents=prompt)
-                logger.info(f"[MODEL] {model_name} 사용")
-                return response.text.strip()
-            except Exception as e:
-                err = str(e)
-                if "429" in err or "quota" in err.lower() or "ResourceExhausted" in type(e).__name__ or "404" in err:
-                    logger.warning(f"[WARN] {model_name} 사용 불가 → 다음 모델 시도")
-                    continue
-                raise
-        if retry == 0:
-            logger.warning("[RATE LIMIT] 모든 모델 한도 초과 → 65초 대기 후 재시도")
-            time.sleep(65)
-    raise RuntimeError("429 모든 Gemini 모델 한도 초과 (재시도 후)")
-
-
 def load_config() -> dict:
     config_path = Path(__file__).parent.parent / "config" / "settings.yaml"
     with open(config_path, "r", encoding="utf-8") as f:
@@ -106,7 +40,6 @@ JSON으로만 응답: {{"score": 점수, "pass": true/false, "reason": "한줄�
 """
 
 
-@retry_on_rate_limit(max_retries=3, wait_seconds=60)
 def batch_review_posts(posts: list[dict], min_score: int) -> list[dict]:
     """
     여러 포스트를 1회 Gemini 호출로 일괄 검수.
@@ -174,7 +107,6 @@ def batch_review_posts(posts: list[dict], min_score: int) -> list[dict]:
     return reviews
 
 
-@retry_on_rate_limit(max_retries=3, wait_seconds=60)
 def review_post(post: dict) -> dict:
     """
     단일 포스트 검수 (배치가 불가한 경우 폴백용).
@@ -294,22 +226,11 @@ def run_reviewer_agent(posts: list[dict], max_revisions: int = 1) -> list[dict]:
     # 배치 검수 (1회 Gemini 호출)
     if valid_posts:
         logger.info(f"배치 검수: {len(valid_posts)}개 포스트 -> 1회 API 호출")
-        try:
-            batch_reviews = batch_review_posts(valid_posts, min_score)
-            for post, review in zip(valid_posts, batch_reviews):
-                post["review_result"] = review
-        except RuntimeError as e:
-            logger.warning(f"배치 검수 실패 ({e}) — 전체 강제 통과 처리")
-            for post in valid_posts:
-                post["review_result"] = {
-                    "total_score": 0,
-                    "breakdown": {},
-                    "issues": [],
-                    "pass": True,
-                    "min_score": min_score,
-                    "forced_pass": True,
-                    "revision_notes": f"API 한도 초과로 검수 생략: {e}",
-                }
+        batch_reviews = batch_review_posts(valid_posts, min_score)
+        if len(batch_reviews) != len(valid_posts):
+            raise ValueError("검수 결과 수가 대상 포스트 수와 일치하지 않습니다.")
+        for post, review in zip(valid_posts, batch_reviews):
+            post["review_result"] = review
 
     # 불합격 포스트 재작성 (최대 max_revisions회, 단일 검수)
     for post in valid_posts:
