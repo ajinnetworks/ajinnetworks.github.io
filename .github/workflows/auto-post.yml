@@ -21,6 +21,7 @@ on:
 
 jobs:
   auto-post:
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'dry-run'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     concurrency:
@@ -49,6 +50,42 @@ jobs:
       - name: 의존성 설치
         run: |
           pip install PyGithub python-frontmatter requests PyYAML python-dotenv schedule google-genai
+
+      - name: Discover Gemini models for verification
+        if: env.GEMINI_MODELS == ''
+        run: |
+          python - <<'PY'
+          import os
+          import re
+
+          from google import genai
+          from google.genai import errors
+
+          try:
+              with genai.Client(api_key=os.environ["GEMINI_API_KEY"]) as client:
+                  ids = [
+                      model.name.rsplit("/", 1)[-1]
+                      for model in client.models.list()
+                      if model.name and "generateContent" in (model.supported_actions or [])
+                  ]
+          except errors.APIError as error:
+              raise SystemExit(f"Gemini model discovery HTTP {error.code}") from None
+
+          candidates = []
+          for model_id in ids:
+              match = re.fullmatch(r"gemini-(\d+)\.(\d+)-flash(?:-lite)?", model_id)
+              if match:
+                  major, minor = map(int, match.groups())
+                  candidates.append((major, minor, "-lite" not in model_id, model_id))
+          models = [item[-1] for item in sorted(candidates, reverse=True)[:3]]
+          if "gemini-flash-latest" in ids and len(models) < 3:
+              models.append("gemini-flash-latest")
+          if not models:
+              raise SystemExit("No supported stable Gemini Flash model found")
+          print("Gemini candidates:", ", ".join(models))
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env_file:
+              env_file.write("GEMINI_MODELS=" + ",".join(models) + "\n")
+          PY
 
       - name: 블로그 포스트 자동 생성 및 발행
         run: |
