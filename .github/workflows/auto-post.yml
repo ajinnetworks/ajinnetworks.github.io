@@ -73,13 +73,18 @@ jobs:
 
           candidates = []
           for model_id in ids:
-              match = re.fullmatch(r"gemini-(\d+)\.(\d+)-flash(?:-lite)?", model_id)
+              match = re.fullmatch(r"gemini-(\d+)\.(\d+)-(flash-lite|pro|flash)", model_id)
               if match:
-                  major, minor = map(int, match.groups())
-                  candidates.append((major, minor, "-lite" not in model_id, model_id))
-          models = [item[-1] for item in sorted(candidates, reverse=True)[:3]]
-          if "gemini-flash-latest" in ids and len(models) < 3:
-              models.append("gemini-flash-latest")
+                  major, minor = map(int, match.groups()[:2])
+                  candidates.append((major, minor, match[3], model_id))
+          models = []
+          for family in ("flash-lite", "pro", "flash"):
+              family_models = [item for item in candidates if item[2] == family]
+              if family_models:
+                  models.append(max(family_models)[-1])
+          for alias in ("gemini-flash-lite-latest", "gemini-pro-latest", "gemini-flash-latest"):
+              if alias in ids and len(models) < 4:
+                  models.append(alias)
           if not models:
               raise SystemExit("No supported stable Gemini Flash model found")
           print("Gemini candidates:", ", ".join(models))
