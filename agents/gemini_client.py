@@ -1,4 +1,5 @@
 """Shared Gemini model selection for trend, writing and reviewing."""
+from functools import lru_cache
 import logging
 import os
 import time
@@ -14,7 +15,41 @@ class GeminiGenerationError(RuntimeError):
     """Generation cannot continue with the configured Gemini models."""
 
 
+@lru_cache(maxsize=1)
+def _anthropic_model():
+    import anthropic
+
+    client = anthropic.Anthropic(
+        api_key=os.environ["ANTHROPIC_API_KEY"].strip(), timeout=60, max_retries=0
+    )
+    models = [model.id for model in client.models.list(limit=100)]
+    model = next((name for name in models if "sonnet" in name), None)
+    if not model:
+        raise GeminiGenerationError("Anthropic no Sonnet model available")
+    return client, model
+
+
+def _anthropic_response(prompt: str) -> str:
+    try:
+        client, model = _anthropic_model()
+        response = client.messages.create(
+            model=model, max_tokens=8192, messages=[{"role": "user", "content": prompt}]
+        )
+    except GeminiGenerationError:
+        raise
+    except Exception as error:
+        status = getattr(error, "status_code", type(error).__name__)
+        raise GeminiGenerationError(f"Anthropic fallback failed status={status}") from None
+    text = "".join(block.text for block in response.content if block.type == "text").strip()
+    if not text or response.stop_reason == "max_tokens":
+        raise GeminiGenerationError("Anthropic fallback returned empty or truncated content")
+    logger.info("Anthropic model=%s status=ok", model)
+    return text
+
+
 def get_gemini_response(prompt: str) -> str:
+    if getattr(get_gemini_response, "_use_anthropic", False):
+        return _anthropic_response(prompt)
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
     models = list(dict.fromkeys(
         name.strip() for name in os.getenv("GEMINI_MODELS", "").split(",")
@@ -62,4 +97,9 @@ def get_gemini_response(prompt: str) -> str:
         time.sleep(65)
 
     detail = ", ".join(f"{model}={code}" for model, code in failures.items())
-    raise GeminiGenerationError(f"Gemini candidates exhausted ({detail})")
+    if os.getenv("ANTHROPIC_API_KEY", "").strip():
+        logger.warning("Gemini candidates exhausted (%s), attempting Anthropic", detail)
+        text = _anthropic_response(prompt)
+        get_gemini_response._use_anthropic = True
+        return text
+    raise GeminiGenerationError(f"Gemini candidates exhausted ({detail}); Anthropic key unavailable")
