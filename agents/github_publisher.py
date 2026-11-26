@@ -77,20 +77,32 @@ HERO_DIR = "/assets/img/hero-v2"
 HERO_KEYWORDS = [  # (제목·키워드에 포함되면, 일러스트) — 위에서부터 우선
     (("택트", "사이클타임", "라인 밸런싱", "병목"), "smart-oee"),
     (("팔레타이징", "적재"), "palletizing"),
-    (("포장", "라벨", "케이스 패커", "테이핑"), "packaging-line"),
+    (("포장", "라벨러", "라벨 부착", "케이스 패커", "테이핑"), "packaging-line"),
+    (("소터", "분류기"), "sorter"),
     (("자동창고", "AS/RS", "ASRS", "스태커"), "logistics-asrs"),
-    (("AMR", "AGV", "자율이동", "무인운반"), "logistics-amr"),
+    (("반도체", "웨이퍼", "HBM", "OHT", "MLCC"), "semiconductor-fab"),
+    (("배터리", "이차전지", "2차전지", "수소전지"), "battery-cell"),
+    (("AMR", "AGV", "자율이동", "무인운반"), "agv-amr"),  # 아래 _pick_agv_amr에서 세분
+    (("용접",), "robot-welding"),
+    (("CNC", "가공"), "cnc-machining"),
+    (("협동로봇", "코봇", "픽앤플레이스", "PICK"), "cobot-assembly"),
+    (("디지털 트윈", "디지털트윈"), "digital-twin"),
+    (("FEMS", "에너지", "전력", "탄소"), "energy-fems"),
+    (("중대재해", "안전", "웨어러블", "사고"), "safety-monitoring"),
+    (("5G", "IOT", "통신", "네트워크"), "iiot-network"),
+    (("딥러닝", "CNN", "불량"), "deep-learning-defect"),
     (("그리퍼", "EOAT", "엔드이펙터", "로봇"), "robot-eoat"),
     (("PLC", "HMI", "SCADA", "EtherCAT", "PROFINET", "제어"), "plc-control"),
     (("비전", "AOI", "검사"), "vision-inspection"),
-    (("OEE", "MES", "예지보전", "모니터링"), "smart-oee"),
+    (("OEE", "MES", "예지보전", "예측 보전", "예측보전", "모니터링"), "smart-oee"),
+    (("보조금", "지원 사업", "정부 지원", "세액", "ROI", "주가", "투자", "정책", "원가"), "investment-roi"),
 ]
 CATEGORY_HEROES = {
-    "딥러닝비전": ["vision-inspection"],
-    "물류자동화": ["logistics-amr", "logistics-asrs"],
-    "공장자동화": ["robot-eoat", "palletizing", "packaging-line"],
-    "제어SW": ["plc-control"],
-    "스마트팩토리": ["smart-oee", "robot-eoat"],
+    "딥러닝비전": ["vision-inspection", "deep-learning-defect"],
+    "물류자동화": ["agv-transfer", "amr-fleet", "logistics-asrs", "sorter"],
+    "공장자동화": ["robot-eoat", "palletizing", "packaging-line", "cobot-assembly"],
+    "제어SW": ["plc-control", "iiot-network"],
+    "스마트팩토리": ["smart-oee", "digital-twin", "iiot-network", "investment-roi", "robot-eoat"],
 }
 _EXTERNAL_IMAGE = re.compile(r"!\[[^\]]*\]\(https?://[^)\s]+[^)]*\)")
 
@@ -101,12 +113,36 @@ def strip_external_images(content: str) -> str:
     return re.sub(r"\n{3,}", "\n\n", cleaned).strip() + "\n"
 
 
+AGV_AMR_HEROES = ("agv-transfer", "amr-fleet", "logistics-amr")  # HERO_KEYWORDS의 "agv-amr"이 실제로 쓰는 파일
+AMR_FLEET_TERMS = ("관제", "충전", "군집", "경로", "FLEET", "트래픽")
+AGV_TERMS = ("AGV", "무인운반", "고하중", "중하중")
+AMR_TERMS = ("AMR", "자율이동")
+
+
+def _pick_agv_amr(title: str, text: str) -> str:
+    """AGV(정해진 경로 반송)와 AMR(관제·충전·경로 계획)을 구분. 둘 다 언급하면 3종 중 고정 선택."""
+    if any(t in text for t in AMR_FLEET_TERMS):
+        return "amr-fleet"
+    agv, amr = any(t in text for t in AGV_TERMS), any(t in text for t in AMR_TERMS)
+    if agv and not amr:
+        return "agv-transfer"
+    if amr and not agv:
+        return "amr-fleet"
+    return AGV_AMR_HEROES[zlib.crc32((title or "").encode("utf-8")) % len(AGV_AMR_HEROES)]
+
+
 def pick_hero_image(title: str, category: str, keywords=None) -> str:
-    """제목·키워드에 맞는 공정 일러스트, 없으면 카테고리 일러스트 (같은 제목은 항상 같은 결과)."""
-    text = " ".join([title or ""] + [str(k) for k in (keywords or [])]).upper()
-    for terms, name in HERO_KEYWORDS:
-        if any(t.upper() in text for t in terms):
-            return f"{HERO_DIR}/{name}.svg"
+    """제목에 맞는 공정 일러스트 → (제목에 없으면) 키워드 → 카테고리 일러스트. 같은 입력은 항상 같은 결과.
+
+    제목을 먼저 보는 이유: SEO 키워드에는 주제와 무관한 항목(예: AMR 글에 'AGV')이 섞여 있다.
+    """
+    for text in (title or "", " ".join(str(k) for k in (keywords or []))):
+        text = text.upper()
+        for terms, name in HERO_KEYWORDS:
+            if any(t.upper() in text for t in terms):
+                if name == "agv-amr":
+                    name = _pick_agv_amr(title, text)
+                return f"{HERO_DIR}/{name}.svg"
     options = CATEGORY_HEROES.get(category) or CATEGORY_HEROES["스마트팩토리"]
     name = options[zlib.crc32((title or "").encode("utf-8")) % len(options)]
     return f"{HERO_DIR}/{name}.svg"

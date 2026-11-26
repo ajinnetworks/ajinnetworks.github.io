@@ -24,7 +24,7 @@ tags:
 - 스마트팩토리
 - 아진네트웍스
 title: AMR 기반 물류 자동화 전략 - HMGICS 사례와 아진네트웍스
-image: /assets/img/hero-v2/logistics-amr.svg
+image: /assets/img/hero-v2/amr-fleet.svg
 image_alt: "AMR 기반 물류 자동화 전략 - HMGICS 사례와 아진네트웍스 — 물류자동화 공정 일러스트"
 image_strategy: process-hero-v3-bulk
 ---

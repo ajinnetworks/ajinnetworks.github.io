@@ -5,7 +5,7 @@ date: 2025-03-23 09:00:00 +0900
 categories: [자동화, AI]
 tags: [블로그자동화, Claude, AI에이전트]
 description: "AI 기반 자동 블로그 포스팅 시스템이 가동되었습니다."
-image: /assets/img/hero-v2/smart-oee.svg
+image: /assets/img/hero-v2/investment-roi.svg
 image_alt: "블로그 자동화 시스템 가동 시작 — 자동화 공정 일러스트"
 image_strategy: process-hero-v3-bulk
 ---

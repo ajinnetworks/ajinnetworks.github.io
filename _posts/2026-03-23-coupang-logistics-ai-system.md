@@ -5,7 +5,7 @@ date: 2026-03-23 22:28:36 +0900
 categories: [공장자동화]
 tags: [이커머스, 물류자동화, AI, 피킹자동화, 분류자동화, WMS]
 description: "대형 이커머스 물류 시스템을 벤치마킹할 때 필요한 자동분류, 피킹, 데이터 연동, 물동량 산정과 단계적 자동화 설계 원칙을 설명합니다."
-image: /assets/img/hero-v2/palletizing.svg
+image: /assets/img/hero-v2/robot-eoat.svg
 image_alt: "이커머스 물류 자동화 시스템: 분류·피킹·AI 데이터 연동 설계 가이드 — 공장자동화 공정 일러스트"
 image_strategy: process-hero-v3-bulk
 ---
