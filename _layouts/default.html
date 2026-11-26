@@ -10,10 +10,10 @@
     {%- assign phase2_image = page.og_image | default: page.image -%}
     {%- if phase2_image -%}
     <!-- Phase 2: post-specific image for social preview and hero -->
-    <meta property="og:image" content="{{ phase2_image | absolute_url }}">
+    <meta property="og:image" content="{{ phase2_image | replace: '.svg', '.png' | absolute_url }}">
     <meta property="og:image:alt" content="{{ page.image_alt | default: page.title | escape }}">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="{{ phase2_image | absolute_url }}">
+    <meta name="twitter:image" content="{{ phase2_image | replace: '.svg', '.png' | absolute_url }}">
     <meta name="twitter:image:alt" content="{{ page.image_alt | default: page.title | escape }}">
     <style>
       .post-hero {

@@ -24,6 +24,9 @@ tags:
 - 군집제어
 - 스마트팩토리
 title: 클로봇 IPO로 본 스마트팩토리 AMR/AGV 군집 제어의 미래
+image: /assets/img/hero-v2/logistics-amr.svg
+image_alt: "클로봇 IPO로 본 스마트팩토리 AMR/AGV 군집 제어의 미래 — 물류자동화 공정 일러스트"
+image_strategy: process-hero-v3-bulk
 ---
 
 

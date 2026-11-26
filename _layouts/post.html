@@ -23,10 +23,10 @@ layout: default
     "name": "아진네트웍스 주식회사",
     "logo": {
       "@type": "ImageObject",
-      "url": "{{ '/assets/images/logo.png' | absolute_url }}"
+      "url": "{{ '/assets/images/ajin_logo.png' | absolute_url }}"
     }
   },
-  "image": "{{ page.og_image | default: '/assets/images/og-default.png' | absolute_url }}",
+  "image": "{{ page.og_image | default: page.image | default: '/assets/img/og-default.png' | replace: '.svg', '.png' | absolute_url }}",
   "mainEntityOfPage": {
     "@type": "WebPage",
     "@id": "{{ page.url | absolute_url }}"

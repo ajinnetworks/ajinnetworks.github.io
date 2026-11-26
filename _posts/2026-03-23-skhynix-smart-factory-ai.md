@@ -5,6 +5,9 @@ date: 2026-03-23 22:31:44 +0900
 categories: [스마트팩토리]
 tags: [반도체, 스마트팩토리, 생산자동화, 머신비전, 무인물류]
 description: "반도체 제조 현장의 스마트팩토리 구축 시 머신비전, 설비 데이터, 예지보전, AMR·AGV 물류를 어떻게 단계적으로 적용할지 실무 관점에서 정리합니다."
+image: /assets/img/hero-v2/vision-inspection.svg
+image_alt: "반도체 스마트팩토리 자동화: 비전·데이터·무인물류 적용 포인트 — 스마트팩토리 공정 일러스트"
+image_strategy: process-hero-v3-bulk
 ---
 
 ## 반도체 자동화의 핵심은 정밀도와 추적성입니다

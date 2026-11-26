@@ -57,3 +57,26 @@ def test_post_layout_respects_explicit_image():
     guard_at = layout.index("{%- unless explicit_hero -%}")
     assert guard_at < script_at < layout.index("{%- endunless -%}", script_at)
     assert '"/assets/img/og-default.png"' in layout  # 사이트 기본값은 고유 이미지로 보지 않음
+
+
+def test_every_post_has_a_hero_image():
+    import glob, re
+    missing = [f for f in glob.glob("_posts/*.md")
+               if not re.search(r"^(og_)?image:", open(f, encoding="utf-8").read().split("---", 2)[1], re.M)]
+    assert missing == []
+
+
+def test_hero_v2_svgs_have_png_for_social_preview():
+    """SNS(카카오·페이스북 등)는 og:image로 SVG를 표시하지 않으므로 PNG 짝이 필요."""
+    for svg in Path("assets/img/hero-v2").glob("*.svg"):
+        assert svg.with_suffix(".png").exists(), svg
+
+
+def test_social_and_jsonld_images_use_png_and_existing_paths():
+    post = Path("_layouts/post.html").read_text(encoding="utf-8")
+    assert "/assets/images/og-default.png" not in post and "/assets/images/logo.png" not in post
+    for f in ("_layouts/post.html", "_includes/head.html", "_layouts/default.html"):
+        for line in Path(f).read_text(encoding="utf-8").splitlines():
+            if 'og:image"' in line or 'twitter:image"' in line or '"image":' in line:
+                if "page.image" in line or "phase2_image" in line:
+                    assert "replace: '.svg', '.png'" in line, (f, line)

@@ -5,6 +5,9 @@ date: 2026-03-23 22:28:02 +0900
 categories: [스마트팩토리]
 tags: [스마트건설, 건설자동화, 산업용로봇, 머신비전, IoT, 디지털전환]
 description: "건설 현장에 로봇, 머신비전, IoT와 데이터 기반 자동화를 적용할 때 필요한 공정 선정, 안전, 인터페이스와 PoC 검증 방법을 정리합니다."
+image: /assets/img/hero-v2/robot-eoat.svg
+image_alt: "스마트 건설 자동화: 로봇·비전·IoT 기술의 현장 적용 방법 — 스마트팩토리 공정 일러스트"
+image_strategy: process-hero-v3-bulk
 ---
 
 ## 건설 자동화는 제조 자동화와 조건이 다릅니다
