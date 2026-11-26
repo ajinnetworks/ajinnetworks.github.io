@@ -154,7 +154,8 @@ def run_full_pipeline(
     logger.info(f"  합격: {result_summary['stages']['reviewer']['passed']}개")
     pub = result_summary["stages"].get("publisher", {})
     label = "[DRY-RUN] 커밋 차단" if dry_run else "발행"
-    logger.info(f"  {label}: {pub.get('published', 0)}개")
+    count = pub.get("dry_run_ready", 0) if dry_run else pub.get("published", 0)
+    logger.info(f"  {label}: {count}개")
     if pub.get("blog_url"):
         logger.info(f"  URL : {pub['blog_url']}")
     logger.info(f"  시간: {elapsed:.1f}초")

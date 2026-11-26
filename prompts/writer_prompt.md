@@ -44,7 +44,7 @@
   "title": "SEO 최적화된 포스트 제목 (35~60자)",
   "meta_description": "검색 결과 표시용 설명 (120~150자, 키워드 포함)",
   "tags": ["태그1", "태그2", "태그3", "태그4", "태그5"],
-  "category": "공장자동화/스마트팩토리",
+  "category": "물류자동화 | 공장자동화 | 딥러닝비전 | 스마트팩토리 | 제어SW 중 하나",
   "content": "## 도입\n\n내용...\n\n![이미지](https://images.unsplash.com/photo-XXX?w=800&q=80)\n\n## 본론1\n\n내용...",
   "seo_keywords": ["주요키워드1", "주요키워드2", "롱테일키워드"],
   "estimated_read_time": 5,
