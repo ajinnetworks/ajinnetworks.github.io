@@ -12,7 +12,8 @@ from agents.writer_agent import SITE_CATEGORIES
 
 
 def test_every_referenced_illustration_exists():
-    names = {n for _, n in HERO_KEYWORDS} | {n for v in CATEGORY_HEROES.values() for n in v}
+    from agents.github_publisher import AGV_AMR_HEROES
+    names = ({n for _, n in HERO_KEYWORDS} - {"agv-amr"}) | set(AGV_AMR_HEROES) | {n for v in CATEGORY_HEROES.values() for n in v}
     for name in names:
         assert Path(f".{HERO_DIR}/{name}.svg").is_file(), name
 
@@ -93,8 +94,8 @@ def test_new_topic_illustrations_are_used():
 
 def test_every_hero_illustration_file_exists_and_no_image_dominates():
     import collections, glob, re
-    from agents.github_publisher import CATEGORY_HEROES, HERO_KEYWORDS
-    names = {n for _, n in HERO_KEYWORDS}
+    from agents.github_publisher import AGV_AMR_HEROES, CATEGORY_HEROES, HERO_KEYWORDS
+    names = ({n for _, n in HERO_KEYWORDS} - {"agv-amr"}) | set(AGV_AMR_HEROES)
     for opts in CATEGORY_HEROES.values():
         names.update(opts)
     for n in names:
@@ -103,3 +104,36 @@ def test_every_hero_illustration_file_exists_and_no_image_dominates():
         m.group(1) for f in glob.glob("_posts/*.md")
         if (m := re.search(r"^image:\s*\S+/hero-v2/(\S+)\.svg", open(f, encoding="utf-8").read().split("---", 2)[1], re.M)))
     assert max(used.values()) <= 0.2 * sum(used.values())  # 한 그림이 20% 넘게 반복되지 않게
+
+
+def test_agv_and_amr_get_separate_illustrations():
+    assert pick_hero_image("고하중 AGV 도입 핵심", "물류자동화").endswith("/agv-transfer.svg")
+    assert pick_hero_image("AMR 관제로 물류 고속도로 구축", "물류자동화").endswith("/amr-fleet.svg")
+    assert pick_hero_image("AMR 도입 전 확인할 3가지", "물류자동화").endswith("/amr-fleet.svg")
+    both = pick_hero_image("AGV·AMR 도입 전 확인할 3가지", "물류자동화")
+    assert both.rsplit("/", 1)[1] in {"agv-transfer.svg", "amr-fleet.svg", "logistics-amr.svg"}
+    assert both == pick_hero_image("AGV·AMR 도입 전 확인할 3가지", "물류자동화")  # 고정 결과
+
+
+def test_title_match_beats_noisy_seo_keywords():
+    # AMR 글에 SEO 키워드로 'AGV'가 붙어 있어도 제목 기준으로 고른다
+    assert pick_hero_image("AMR 물류 허브 전략", "물류자동화", ["AGV", "CNC 무인 가공"]).endswith("/amr-fleet.svg")
+    # '데이터 라벨링'은 포장 라벨러가 아님
+    assert not pick_hero_image("특수 불량 해결 전략", "딥러닝비전", ["데이터 라벨링"]).endswith("/packaging-line.svg")
+
+
+def test_image_lock_is_respected_by_bulk_assigner():
+    from scripts.assign_hero_images import plan
+    locked = "---\ntitle: AGV 도입\ncategories:\n- 물류자동화\nimage: /assets/img/hero-v2/robot-welding.svg\nimage_lock: true\n---\n본문"
+    assert plan(locked) == (None, None)
+    unlocked = locked.replace("image_lock: true\n", "")
+    assert plan(unlocked)[1].endswith("/agv-transfer.svg")
+    og = "---\ntitle: AGV 도입\nog_image: /x.png\n---\n"
+    assert plan(og) == (None, None)
+
+
+def test_bulk_assigner_is_idempotent_on_repo():
+    from scripts.assign_hero_images import plan
+    pending = [f for f in Path("_posts").glob("*.md")
+               if (p := plan(f.read_text(encoding="utf-8")))[1] and p[0] != p[1]]
+    assert pending == []

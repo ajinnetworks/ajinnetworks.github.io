@@ -180,6 +180,15 @@ Shorts: https://www.youtube.com/@AjinSoftRock/shorts
 
 ---
 
+## 대표 이미지 (hero-v2 공정 일러스트)
+
+- 규칙: `agents/github_publisher.py` `pick_hero_image` — 제목 → (없으면) keywords → 카테고리 순
+- 일괄 재배정: `python scripts/assign_hero_images.py` (미리보기) / `--write` (적용)
+- 수동 고정: 글 머리말에 `image_lock: true` → 일괄 재배정에서 제외
+- `og_image`가 있는 글은 건드리지 않음. SNS·JSON-LD는 같은 이름의 PNG 사용
+
+---
+
 ## 알려진 이슈 및 해결책
 
 ### 1. 블로그 캐시 지연
