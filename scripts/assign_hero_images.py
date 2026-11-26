@@ -6,9 +6,11 @@
 - 규칙: agents/github_publisher.pick_hero_image (새 글 발행과 동일)
 
 사용: python scripts/assign_hero_images.py [--write] [--posts _posts]
-      python scripts/assign_hero_images.py --check [--max-share 0.2]
+      python scripts/assign_hero_images.py --check [--max-share 0.2] [--request-file PATH]
         → 현재 글들의 hero-v2 그림 분포를 점검. 한 그림이 비율을 넘으면 경고
           (GitHub Actions에서는 ::warning:: 주석과 실행 요약에 표시, 종료 코드는 0)
+        → --request-file을 주면, 넘는 그림이 있을 때 일러스트 추가 요청서(해당 글 목록,
+          나눌 만한 세부 주제 후보)를 쓰고 GITHUB_OUTPUT에 over=true를 남긴다
 """
 from __future__ import annotations
 
@@ -75,6 +77,62 @@ def apply(text: str, new: str) -> str:
     return "---" + fm + "---" + body
 
 
+STOPWORDS = {
+    "아진네트웍스", "기술팀", "해설", "도입", "확인할", "반드시", "가지", "완전", "정복", "사례", "해결한",
+    "전략", "방법", "가이드", "분석", "트렌드", "기술", "스마트팩토리", "자동화", "혁신", "미래", "통한",
+    "위한", "핵심", "솔루션", "높이는", "해결", "제조", "현장", "시스템", "기반", "활용", "도입과", "도입으로",
+}
+
+
+def _title_terms(title: str) -> list[str]:
+    out = []
+    for w in re.findall(r"[A-Za-z][A-Za-z0-9/+-]{1,}|[가-힣]{2,}", title):
+        if not w.isascii() and len(w) > 2:
+            w = re.sub(r"(으로|에서|로|의|을|를|은|는|과|와|이|가)$", "", w)  # 조사 제거
+        w = w.upper() if w.isascii() else w
+        if w not in STOPWORDS and len(w) >= 2:
+            out.append(w)
+    return out
+
+
+def split_candidates(posts_dir, image: str, top: int = 10) -> tuple[list[tuple[str, int]], list[str]]:
+    """과다 사용 그림의 글에서 자주 나오는 제목 단어(이미 그 그림의 규칙에 있는 단어 제외)와 글 제목 목록."""
+    from agents.github_publisher import AGV_AMR_HEROES, AGV_TERMS, AMR_FLEET_TERMS, AMR_TERMS, HERO_KEYWORDS
+    name = image.removesuffix(".svg")
+    known = {t.upper() for terms, n in HERO_KEYWORDS
+             if n == name or (n == "agv-amr" and name in AGV_AMR_HEROES) for t in terms}
+    if name in AGV_AMR_HEROES:
+        known |= {t.upper() for t in (*AGV_TERMS, *AMR_TERMS, *AMR_FLEET_TERMS)}
+    counts, titles = collections.Counter(), []
+    for f in sorted(Path(posts_dir).glob("*.md")):
+        text = f.read_text(encoding="utf-8")
+        if not text.startswith("---"):
+            continue
+        fm = text.split("---", 2)[1]
+        m = IMAGE_RE.search(fm)
+        if m and m.group(1).endswith("/" + image) and not re.search(r"^og_image:", fm, re.M):
+            title = _field(fm, "title")
+            titles.append(title)
+            counts.update({w for w in _title_terms(title) if not any(k in w.upper() for k in known)})
+    return [(w, n) for w, n in counts.most_common() if n >= 2][:top], titles
+
+
+def write_request(posts_dir, path, over: list[tuple[str, int]], total: int, max_share: float) -> None:
+    lines = ["# 대표 그림 반복 해소 요청 (자동 생성)", "",
+             f"한 그림이 전체 hero-v2 글의 {max_share:.0%}를 넘었습니다. 아래 근거로 일러스트를 추가하고 "
+             "`agents/github_publisher.py`의 `HERO_KEYWORDS`를 나눈 뒤 "
+             "`python scripts/assign_hero_images.py --write`로 재배정하세요.", "",
+             "> 이 문서는 근거만 담습니다. 그림 제작·규칙 수정은 사람이 하거나 Claude 세션에 맡기세요.", ""]
+    for image, n in over:
+        cands, titles = split_candidates(posts_dir, image)
+        lines += [f"## {image} — {n}/{total}편 ({n / total:.0%})", "",
+                  "### 나눌 만한 세부 주제 후보 (제목 빈출 단어, 기존 규칙어 제외)", "",
+                  "| 단어 | 글 수 |", "|---|---|", *(f"| {w} | {c} |" for w, c in cands), "",
+                  f"### 해당 글 ({len(titles)}편)", "", *(f"- {t}" for t in titles), ""]
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    Path(path).write_text("\n".join(lines), encoding="utf-8")
+
+
 def current_distribution(posts_dir) -> collections.Counter:
     """실제 image 값 기준 hero-v2 그림 사용 수 (잠금 글 포함, og_image 글 제외)."""
     used = collections.Counter()
@@ -89,9 +147,16 @@ def current_distribution(posts_dir) -> collections.Counter:
     return used
 
 
-def check(posts_dir, max_share: float) -> list[str]:
+def check(posts_dir, max_share: float, request_file=None) -> list[str]:
     used = current_distribution(posts_dir)
     total = sum(used.values())
+    over = [(name, n) for name, n in used.most_common() if total and n / total > max_share]
+    if request_file and over:
+        write_request(posts_dir, request_file, over, total, max_share)
+    gh_out = os.environ.get("GITHUB_OUTPUT")
+    if gh_out:
+        with open(gh_out, "a", encoding="utf-8") as fh:
+            fh.write(f"over={'true' if over else 'false'}\nover_images={' '.join(n for n, _ in over)}\n")
     warnings = [f"대표 그림 '{name}'이 {n}/{total}편({n / total:.0%})에 쓰여 기준 {max_share:.0%}를 넘습니다. "
                 f"일러스트를 추가하거나 규칙(HERO_KEYWORDS)을 나누세요."
                 for name, n in used.most_common() if total and n / total > max_share]
@@ -115,9 +180,10 @@ def main(argv=None) -> int:
     ap.add_argument("--posts", default=str(ROOT / "_posts"))
     ap.add_argument("--check", action="store_true", help="분포 점검만 (파일 변경 없음)")
     ap.add_argument("--max-share", type=float, default=0.2)
+    ap.add_argument("--request-file", help="기준 초과 시 일러스트 추가 요청서를 쓸 경로")
     args = ap.parse_args(argv)
     if args.check:
-        check(args.posts, args.max_share)
+        check(args.posts, args.max_share, args.request_file)
         return 0
     after, changed, locked = collections.Counter(), 0, 0
     for f in sorted(Path(args.posts).glob("*.md")):

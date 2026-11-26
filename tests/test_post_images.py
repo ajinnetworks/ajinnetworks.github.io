@@ -154,3 +154,28 @@ def test_distribution_check_warns_over_threshold(tmp_path, capsys):
 def test_auto_post_workflow_runs_distribution_check():
     wf = Path(".github/workflows/auto-post.yml").read_text(encoding="utf-8")
     assert "assign_hero_images.py --check" in wf and "continue-on-error: true" in wf
+
+
+def test_request_file_written_only_when_over(tmp_path, monkeypatch):
+    from scripts.assign_hero_images import check
+    for i in range(3):
+        (tmp_path / f"a{i}.md").write_text(
+            f"---\ntitle: 비전검사 균열 사례 {i}\nimage: {HERO_DIR}/vision-inspection.svg\n---\n", encoding="utf-8")
+    (tmp_path / "b.md").write_text(f"---\ntitle: b\nimage: {HERO_DIR}/sorter.svg\n---\n", encoding="utf-8")
+    out = tmp_path / "gh_output"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(out))
+    req = tmp_path / "req.md"
+    check(tmp_path, 0.9, req)
+    assert not req.exists() and "over=false" in out.read_text()
+    check(tmp_path, 0.5, req)
+    text = req.read_text(encoding="utf-8")
+    assert "vision-inspection.svg — 3/4편" in text and "| 균열 | 3 |" in text
+    assert "| 비전검사 |" not in text  # 이미 규칙에 있는 단어(비전·검사)는 후보에서 제외
+    assert "over_images=vision-inspection.svg" in out.read_text()
+
+
+def test_auto_post_opens_draft_pr_only_on_dedicated_branch():
+    wf = Path(".github/workflows/auto-post.yml").read_text(encoding="utf-8")
+    assert "steps.hero_check.outputs.over == 'true'" in wf
+    assert "BR=auto/hero-split-request" in wf and "--draft" in wf
+    assert 'HEAD:refs/heads/${BR}' in wf and "refs/heads/main" not in wf
