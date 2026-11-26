@@ -6,11 +6,15 @@
 - 규칙: agents/github_publisher.pick_hero_image (새 글 발행과 동일)
 
 사용: python scripts/assign_hero_images.py [--write] [--posts _posts]
+      python scripts/assign_hero_images.py --check [--max-share 0.2]
+        → 현재 글들의 hero-v2 그림 분포를 점검. 한 그림이 비율을 넘으면 경고
+          (GitHub Actions에서는 ::warning:: 주석과 실행 요약에 표시, 종료 코드는 0)
 """
 from __future__ import annotations
 
 import argparse
 import collections
+import os
 import re
 import sys
 from pathlib import Path
@@ -71,11 +75,50 @@ def apply(text: str, new: str) -> str:
     return "---" + fm + "---" + body
 
 
+def current_distribution(posts_dir) -> collections.Counter:
+    """실제 image 값 기준 hero-v2 그림 사용 수 (잠금 글 포함, og_image 글 제외)."""
+    used = collections.Counter()
+    for f in Path(posts_dir).glob("*.md"):
+        text = f.read_text(encoding="utf-8")
+        if not text.startswith("---"):
+            continue
+        fm = text.split("---", 2)[1]
+        m = IMAGE_RE.search(fm)
+        if m and m.group(1).startswith(HERO_DIR + "/") and not re.search(r"^og_image:", fm, re.M):
+            used[m.group(1).rsplit("/", 1)[1]] += 1
+    return used
+
+
+def check(posts_dir, max_share: float) -> list[str]:
+    used = current_distribution(posts_dir)
+    total = sum(used.values())
+    warnings = [f"대표 그림 '{name}'이 {n}/{total}편({n / total:.0%})에 쓰여 기준 {max_share:.0%}를 넘습니다. "
+                f"일러스트를 추가하거나 규칙(HERO_KEYWORDS)을 나누세요."
+                for name, n in used.most_common() if total and n / total > max_share]
+    lines = ["### 대표 그림 분포", "", f"hero-v2 사용 글 {total}편, 기준: 한 그림 {max_share:.0%} 이하", "",
+             "| 그림 | 글 수 | 비율 |", "|---|---|---|"]
+    lines += [f"| {name} | {n} | {n / total:.0%} |" for name, n in used.most_common(8)]
+    lines += ["", *(f"- ⚠️ {w}" for w in warnings)] if warnings else ["", "- 기준 이내"]
+    summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    if summary:
+        with open(summary, "a", encoding="utf-8") as fh:
+            fh.write("\n".join(lines) + "\n")
+    print("\n".join(lines))
+    for w in warnings:
+        print(f"::warning title=대표 그림 반복::{w}")
+    return warnings
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true")
     ap.add_argument("--posts", default=str(ROOT / "_posts"))
+    ap.add_argument("--check", action="store_true", help="분포 점검만 (파일 변경 없음)")
+    ap.add_argument("--max-share", type=float, default=0.2)
     args = ap.parse_args(argv)
+    if args.check:
+        check(args.posts, args.max_share)
+        return 0
     after, changed, locked = collections.Counter(), 0, 0
     for f in sorted(Path(args.posts).glob("*.md")):
         text = f.read_text(encoding="utf-8")

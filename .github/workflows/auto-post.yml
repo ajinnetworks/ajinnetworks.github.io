@@ -59,6 +59,14 @@ jobs:
           echo "실행 모드: $MODE"
           python scripts/run_agent.py --mode "$MODE" --platform github
 
+      - name: 대표 그림 분포 점검 (한 그림 20% 초과 시 경고)
+        # 발행은 GitHub API로 커밋되므로 최신 main을 받아 새 글까지 포함해 점검. 경고만 하고 실패시키지 않음
+        if: success()
+        continue-on-error: true
+        run: |
+          git pull --ff-only --quiet origin "${{ github.ref_name }}" || echo "::notice::최신 main을 받지 못해 체크아웃 시점 기준으로 점검합니다"
+          python scripts/assign_hero_images.py --check --max-share 0.2
+
       - name: 실행 로그 업로드
         if: always()
         uses: actions/upload-artifact@v4

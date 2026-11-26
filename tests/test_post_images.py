@@ -137,3 +137,20 @@ def test_bulk_assigner_is_idempotent_on_repo():
     pending = [f for f in Path("_posts").glob("*.md")
                if (p := plan(f.read_text(encoding="utf-8")))[1] and p[0] != p[1]]
     assert pending == []
+
+
+def test_distribution_check_warns_over_threshold(tmp_path, capsys):
+    from scripts.assign_hero_images import check
+    for i in range(3):
+        (tmp_path / f"a{i}.md").write_text(f"---\ntitle: t{i}\nimage: {HERO_DIR}/amr-fleet.svg\n---\n", encoding="utf-8")
+    (tmp_path / "b.md").write_text(f"---\ntitle: b\nimage: {HERO_DIR}/sorter.svg\n---\n", encoding="utf-8")
+    (tmp_path / "c.md").write_text(f"---\ntitle: c\nog_image: /x.png\nimage: {HERO_DIR}/amr-fleet.svg\n---\n", encoding="utf-8")
+    warnings = check(tmp_path, 0.5)
+    assert len(warnings) == 1 and "amr-fleet.svg" in warnings[0] and "3/4" in warnings[0]
+    assert "::warning" in capsys.readouterr().out
+    assert check(tmp_path, 0.8) == []
+
+
+def test_auto_post_workflow_runs_distribution_check():
+    wf = Path(".github/workflows/auto-post.yml").read_text(encoding="utf-8")
+    assert "assign_hero_images.py --check" in wf and "continue-on-error: true" in wf

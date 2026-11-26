@@ -186,6 +186,7 @@ Shorts: https://www.youtube.com/@AjinSoftRock/shorts
 - 일괄 재배정: `python scripts/assign_hero_images.py` (미리보기) / `--write` (적용)
 - 수동 고정: 글 머리말에 `image_lock: true` → 일괄 재배정에서 제외
 - `og_image`가 있는 글은 건드리지 않음. SNS·JSON-LD는 같은 이름의 PNG 사용
+- 분포 점검: `--check` (기본 20%). `auto-post.yml`이 발행 후 실행 → 넘으면 Actions 경고·실행 요약에 표시 (실패 처리 안 함)
 
 ---
 
