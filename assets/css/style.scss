@@ -145,14 +145,6 @@ body {
   .nav-logo-text { white-space: nowrap; }
   .site-header .wrapper { padding: 0 16px; }
 }
-@media (max-width: 400px) {
-  .nav-contrast-text { display: none; }
-  .nav-contrast-btn::before { content: '◐'; font-size: 15px; }
-  .nav-contrast-btn { padding: 3px 7px; }
-  .nav-hamburger { padding: 6px; }
-  .nav-logo { gap: 6px; }
-  .nav-right { gap: 2px; }
-}
 .nav-contrast-btn:hover { color: #1a202c; background: #f7fafc; }
 .nav-contrast-btn[aria-pressed="true"] {
   background: var(--primary);
@@ -183,6 +175,16 @@ body {
   line-height: 1;
 }
 .nav-hamburger:hover { color: #1a202c; background: #f7fafc; }
+
+/* 좁은 화면 헤더: 기본 .nav-right / .nav-hamburger 규칙 뒤에 두어야 적용됨 */
+@media (max-width: 400px) {
+  .nav-contrast-text { display: none; }
+  .nav-contrast-btn::before { content: '◐'; font-size: 15px; }
+  .nav-contrast-btn { padding: 3px 7px; }
+  .nav-hamburger { padding: 6px; }
+  .nav-logo { gap: 6px; }
+  .nav-right { gap: 2px; }
+}
 
 @media (max-width: 640px) {
   .nav-hamburger { display: flex; align-items: center; justify-content: center; }
