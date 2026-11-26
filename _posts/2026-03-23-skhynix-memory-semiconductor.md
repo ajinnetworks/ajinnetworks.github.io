@@ -5,7 +5,7 @@ date: 2026-03-23 22:17:36 +0900
 categories: [스마트팩토리]
 tags: [SK하이닉스, AI메모리, 반도체자동화, 스마트팩토리, 반도체제조]
 description: "SK하이닉스가 AI 메모리 반도체 생산에 도입한 스마트팩토리 자동화 기술과 혁신 사례를 분석합니다. 반도체 제조 자동화의 핵심 기술을 살펴보세요."
-image: /assets/img/hero-v2/robot-eoat.svg
+image: /assets/img/hero-v2/semiconductor-fab.svg
 image_alt: "SK하이닉스 AI 메모리 반도체 생산의 스마트팩토리 자동화 혁신 — 스마트팩토리 공정 일러스트"
 image_strategy: process-hero-v3-bulk
 ---

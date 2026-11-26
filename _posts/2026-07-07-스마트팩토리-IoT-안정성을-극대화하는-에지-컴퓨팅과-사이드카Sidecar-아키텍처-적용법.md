@@ -21,7 +21,7 @@ tags:
 - IoT 아키텍처
 - 공장 자동화
 title: 스마트팩토리 IoT 안정성을 극대화하는 에지 컴퓨팅과 사이드카(Sidecar) 아키텍처 적용법
-image: /assets/img/hero-v2/robot-eoat.svg
+image: /assets/img/hero-v2/iiot-network.svg
 image_alt: "스마트팩토리 IoT 안정성을 극대화하는 에지 컴퓨팅과 사이드카(Sidecar) 아키텍처 적용법 — 스마트팩토리 공정 일러스트"
 image_strategy: process-hero-v3-bulk
 ---

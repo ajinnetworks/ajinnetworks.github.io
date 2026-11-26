@@ -80,3 +80,26 @@ def test_social_and_jsonld_images_use_png_and_existing_paths():
             if 'og:image"' in line or 'twitter:image"' in line or '"image":' in line:
                 if "page.image" in line or "phase2_image" in line:
                     assert "replace: '.svg', '.png'" in line, (f, line)
+
+
+def test_new_topic_illustrations_are_used():
+    assert pick_hero_image("SK하이닉스 HBM 수율", "스마트팩토리").endswith("/semiconductor-fab.svg")
+    assert pick_hero_image("에너지 관리 시스템(FEMS) 도입", "스마트팩토리").endswith("/energy-fems.svg")
+    assert pick_hero_image("중대재해처벌법 대응 안전 모니터링", "스마트팩토리").endswith("/safety-monitoring.svg")
+    assert pick_hero_image("초고속 소터와 AMR", "물류자동화").endswith("/sorter.svg")
+    assert pick_hero_image("딥러닝 비전검사로 미세 결함", "딥러닝비전").endswith("/deep-learning-defect.svg")
+    assert pick_hero_image("오타니로 본 예측 보전", "스마트팩토리").endswith("/smart-oee.svg")
+
+
+def test_every_hero_illustration_file_exists_and_no_image_dominates():
+    import collections, glob, re
+    from agents.github_publisher import CATEGORY_HEROES, HERO_KEYWORDS
+    names = {n for _, n in HERO_KEYWORDS}
+    for opts in CATEGORY_HEROES.values():
+        names.update(opts)
+    for n in names:
+        assert Path(f"assets/img/hero-v2/{n}.svg").exists() and Path(f"assets/img/hero-v2/{n}.png").exists(), n
+    used = collections.Counter(
+        m.group(1) for f in glob.glob("_posts/*.md")
+        if (m := re.search(r"^image:\s*\S+/hero-v2/(\S+)\.svg", open(f, encoding="utf-8").read().split("---", 2)[1], re.M)))
+    assert max(used.values()) <= 0.2 * sum(used.values())  # 한 그림이 20% 넘게 반복되지 않게
