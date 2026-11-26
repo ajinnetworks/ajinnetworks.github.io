@@ -5,6 +5,9 @@ date: 2026-03-24 21:30:41 +0900
 categories: [물류자동화]
 tags: [AI물류자동화, 스마트물류, AMR, AGV, WMS, 물류자동화]
 description: "AMR·AGV·머신비전·WMS/WCS를 실제 물류 현장에 적용할 때 필요한 공정 분석, 시스템 구성, ROI 검토와 단계별 구축 방법을 정리합니다."
+image: /assets/img/hero-v2/logistics-amr.svg
+image_alt: "AI 물류 자동화 도입 전략: AMR·AGV·비전·WMS 연동 실무 가이드 — 물류자동화 공정 일러스트"
+image_strategy: process-hero-v3-bulk
 ---
 
 ## 물류 자동화는 로봇 선정보다 공정 정의가 먼저입니다

@@ -50,7 +50,7 @@
 <meta property="og:url" content="{{ page.url | prepend: site.url }}">
 <meta property="og:site_name" content="{{ site.title }}">
 {% if page.image %}
-  <meta property="og:image" content="{{ page.image | absolute_url }}">
+  <meta property="og:image" content="{{ page.image | replace: '.svg', '.png' | absolute_url }}">
 {% else %}
   <meta property="og:image" content="{{ '/assets/img/og-default.png' | absolute_url }}">
 {% endif %}
