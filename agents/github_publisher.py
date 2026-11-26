@@ -41,21 +41,14 @@ KST = ZoneInfo("Asia/Seoul")
 # ─── 설정 로드 ────────────────────────────────────────────────────────────────
 
 from dotenv import load_dotenv
-load_dotenv(override=True)
-
-# 로컬: GITHUB_TOKEN / Actions: BLOG_GITHUB_TOKEN 통합
-GITHUB_TOKEN = (
-    os.getenv("BLOG_GITHUB_TOKEN") or
-    os.getenv("GITHUB_TOKEN")
-)
-
-if not GITHUB_TOKEN:
-    raise ValueError("GitHub 토큰 없음: BLOG_GITHUB_TOKEN 또는 GITHUB_TOKEN 필요")
-
+load_dotenv(override=False)
 
 def get_github_config() -> dict:
     """환경변수에서 GitHub 설정 읽기."""
-    token = GITHUB_TOKEN
+    token = (os.getenv("BLOG_GITHUB_TOKEN") or "").strip()
+    token = token or (os.getenv("GITHUB_TOKEN") or "").strip()
+    if not token:
+        raise EnvironmentError("GitHub 토큰 없음: BLOG_GITHUB_TOKEN 또는 GITHUB_TOKEN 필요")
     repo_name = os.environ.get("BLOG_REPO") or os.environ.get("GITHUB_REPO")
     branch = os.environ.get("GITHUB_BRANCH", "main")
     posts_path = os.environ.get("GITHUB_POSTS_PATH", "_posts")
@@ -365,12 +358,32 @@ def run_github_publisher(posts: list[dict], dry_run: bool = False) -> list[dict]
     # STEP 3: Git Tree API 일괄 커밋
     today = datetime.now(KST).strftime("%Y-%m-%d")
 
-    auth = Auth.Token(GITHUB_TOKEN)
+    auth = Auth.Token(config["token"])
     g = Github(auth=auth)
     repo = g.get_repo(config["repo_name"])
 
     ref = repo.get_git_ref(f"heads/{config['branch']}")
-    base_tree = repo.get_git_tree(ref.object.sha)
+    parent = repo.get_git_commit(ref.object.sha)
+    base_tree = repo.get_git_tree(parent.tree.sha)
+    seen_paths = set()
+    unique_files = []
+    skipped = []
+    for item in ready_files:
+        path = item["file_path"]
+        if path not in seen_paths:
+            seen_paths.add(path)
+            try:
+                repo.get_contents(path, ref=parent.sha)
+            except GithubException as error:
+                if error.status != 404:
+                    raise
+                unique_files.append(item)
+                continue
+        logger.info("기존 또는 배치 내 중복 경로 건너뜀: %s", path)
+        skipped.append({"file_path": path, "action": "duplicate_skipped"})
+    ready_files = unique_files
+    if not ready_files:
+        return skipped
 
     tree_elements = []
     for f in ready_files:
@@ -393,9 +406,8 @@ def run_github_publisher(posts: list[dict], dry_run: bool = False) -> list[dict]
 
     try:
         new_tree = repo.create_git_tree(tree_elements, base_tree)
-        parent = repo.get_git_commit(ref.object.sha)
         new_commit = repo.create_git_commit(commit_msg, new_tree, [parent])
-        ref.edit(new_commit.sha)
+        ref.edit(new_commit.sha, force=False)
     except GithubException as e:
         logger.error(f"일괄 커밋 실패: {e.status} {e.data}")
         return [{"error": f"GitHub API {e.status}: {e.data}", "platform": "github_pages"}]
@@ -430,7 +442,7 @@ def run_github_publisher(posts: list[dict], dry_run: bool = False) -> list[dict]
         results.append(result)
 
     logger.info(f"GitHub Pages Publisher 완료: {len(results)}/{len(posts)}개 발행")
-    return results
+    return results + skipped
 
 
 if __name__ == "__main__":

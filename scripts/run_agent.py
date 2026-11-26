@@ -34,13 +34,14 @@ from dotenv import load_dotenv
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
+from agents.gemini_client import GeminiGenerationError
 from agents.trend_agent import run_trend_agent
 from agents.writer_agent import run_writer_agent
 from agents.reviewer_agent import run_reviewer_agent
 from agents.publisher_agent import run_publisher_agent
 from agents.github_publisher import run_github_publisher, init_github_repo, get_github_config
 
-load_dotenv(ROOT / ".env", override=True)
+load_dotenv(ROOT / ".env", override=False)
 
 log_level = os.environ.get("LOG_LEVEL", "INFO")
 _log_dir = ROOT / "output" / "logs"
@@ -61,13 +62,17 @@ logger = logging.getLogger("run_agent")
 
 
 def validate_env(platform: str = "github") -> bool:
-    required = ["ANTHROPIC_API_KEY"]
+    required = ["GEMINI_API_KEY"]  # GEMINI_MODELS는 선택: 없으면 실행 시 API에서 탐색
     if platform == "github":
-        required += ["BLOG_GITHUB_TOKEN", "BLOG_REPO"]
+        required += ["BLOG_REPO"]
     elif platform == "wordpress":
         required += ["WORDPRESS_URL", "WORDPRESS_USERNAME", "WORDPRESS_APP_PASSWORD"]
 
-    missing = [k for k in required if not os.environ.get(k)]
+    missing = [k for k in required if not os.environ.get(k, "").strip()]
+    if platform == "github" and not any(
+        os.environ.get(k, "").strip() for k in ("BLOG_GITHUB_TOKEN", "GITHUB_TOKEN")
+    ):
+        missing.append("BLOG_GITHUB_TOKEN or GITHUB_TOKEN")
     if missing:
         logger.error(f"필수 환경변수 미설정: {missing}")
         logger.error("config/.env.sample 참고 후 .env에 입력하세요.")
@@ -121,7 +126,9 @@ def run_full_pipeline(
         result_summary["stages"]["publisher"] = {
             "platform": "github_pages",
             "dry_run": dry_run,
-            "published": len([r for r in publish_results if not r.get("error")]),
+            "published": sum(r.get("action") == "일괄 커밋" for r in publish_results),
+            "dry_run_ready": sum(r.get("action") == "dry-run" for r in publish_results),
+            "duplicates_skipped": sum(r.get("action") == "duplicate_skipped" for r in publish_results),
             "failed": len([r for r in publish_results if r.get("error")]),
             "commit_urls": [r.get("commit_url") for r in publish_results if r.get("commit_url") and r.get("commit_url") != "(dry-run)"],
             "blog_url": next((r.get("blog_url") for r in publish_results if r.get("blog_url") and r.get("blog_url") != "(dry-run)"), None),
@@ -147,7 +154,8 @@ def run_full_pipeline(
     logger.info(f"  합격: {result_summary['stages']['reviewer']['passed']}개")
     pub = result_summary["stages"].get("publisher", {})
     label = "[DRY-RUN] 커밋 차단" if dry_run else "발행"
-    logger.info(f"  {label}: {pub.get('published', 0)}개")
+    count = pub.get("dry_run_ready", 0) if dry_run else pub.get("published", 0)
+    logger.info(f"  {label}: {count}개")
     if pub.get("blog_url"):
         logger.info(f"  URL : {pub['blog_url']}")
     logger.info(f"  시간: {elapsed:.1f}초")
@@ -166,7 +174,7 @@ def main():
         (ROOT / d).mkdir(parents=True, exist_ok=True)
 
     if args.mode == "init-repo":
-        load_dotenv(ROOT / ".env", override=True)
+        load_dotenv(ROOT / ".env", override=False)
         try:
             cfg = get_github_config()
             logger.info(f"GitHub 레포 초기화: {cfg['repo_name']}")
@@ -196,8 +204,17 @@ def main():
     elif args.mode == "dry-run":
         run_full_pipeline(dry_run=True, platform=args.platform)
     elif args.mode == "once":
-        run_full_pipeline(dry_run=False, platform=args.platform)
+        summary = run_full_pipeline(dry_run=False, platform=args.platform)
+        if args.platform == "github":
+            publisher = summary["stages"]["publisher"]
+            if publisher["failed"] or not (publisher["published"] or publisher["duplicates_skipped"]):
+                logger.error("PUBLISH_INCOMPLETE")
+                sys.exit(1)
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except GeminiGenerationError as error:
+        logger.error("SAFE_STOP_GEMINI: %s", error)
+        sys.exit(1)

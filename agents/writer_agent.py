@@ -6,8 +6,8 @@ Worker AI 역할: 실제 콘텐츠 생성 실행
 
 import io
 import json
+import re
 import logging
-import os
 import sys
 
 if sys.stdout.encoding != 'utf-8':
@@ -22,39 +22,10 @@ if sys.stderr.encoding != 'utf-8':
 from datetime import datetime
 from pathlib import Path
 
-from google import genai as google_genai
+from agents.gemini_client import GeminiGenerationError, get_gemini_response
 import yaml
 
 logger = logging.getLogger(__name__)
-
-# 모델 우선순위 (한도 초과 시 자동 전환)
-GEMINI_MODELS = [
-    "gemini-2.0-flash",       # 1순위
-    "gemini-2.0-flash-lite",  # 2순위 (경량, 429 대비)
-    "gemini-flash-latest",    # 3순위 (최신 alias)
-]
-
-
-def get_gemini_response(prompt: str) -> str:
-    """GEMINI_MODELS 순서대로 시도, 429/404 시 다음 모델로 전환. 전체 실패 시 60초 대기 후 1회 재시도."""
-    import time
-    client = google_genai.Client(api_key=os.environ["GEMINI_API_KEY"])
-    for retry in range(2):
-        for model_name in GEMINI_MODELS:
-            try:
-                response = client.models.generate_content(model=model_name, contents=prompt)
-                logger.info(f"[MODEL] {model_name} 사용")
-                return response.text.strip()
-            except Exception as e:
-                err = str(e)
-                if "429" in err or "quota" in err.lower() or "ResourceExhausted" in type(e).__name__ or "404" in err:
-                    logger.warning(f"[WARN] {model_name} 사용 불가 → 다음 모델 시도")
-                    continue
-                raise
-        if retry == 0:
-            logger.warning("[RATE LIMIT] 모든 모델 한도 초과 → 65초 대기 후 재시도")
-            time.sleep(65)
-    raise RuntimeError("429 모든 Gemini 모델 한도 초과 (재시도 후)")
 
 BLOG_CATEGORIES = [
     {
@@ -116,7 +87,7 @@ BLOG_CATEGORIES = [
     {
         "name": "PLC제어",
         "keywords": [
-            "Siemens PLC", "Mitsubishi PLC", "LS PLC", "HMI", "SCADA", "필드버스",
+            "PLC", "Siemens PLC", "Mitsubishi PLC", "LS PLC", "HMI", "SCADA", "필드버스",
             "TIA Portal", "GX Works", "래더 프로그래밍", "인버터 제어",
             "Profinet", "EtherCAT", "Modbus", "OPC-UA", "모션 컨트롤러",
         ]
@@ -146,6 +117,7 @@ EXCLUDE_KEYWORDS = [
     # 금융 관련
     "금융", "카드결제", "핀테크", "은행", "주식",
     "암호화폐", "보험", "대출", "신용카드", "페이먼트",
+    "결제", "연금", "부동산", "환율", "코인",
     # 비제조업/식품/서비스업
     "푸드테크", "외식", "식품", "음식점", "프랜차이즈",
     "배달", "요식업", "카페", "레스토랑", "조리",
@@ -154,26 +126,66 @@ EXCLUDE_KEYWORDS = [
     "이커머스", "온라인쇼핑",
 ]
 
-ALLOWED_CATEGORIES = [cat["name"] for cat in BLOG_CATEGORIES]
+# 사이트가 실제로 쓰는 카테고리 5종 (category/*.md, _layouts/post.html 히어로 색과 일치해야 함)
+SITE_CATEGORIES = ["물류자동화", "공장자동화", "딥러닝비전", "스마트팩토리", "제어SW"]
+DEFAULT_CATEGORY = "스마트팩토리"
+
+# 위 BLOG_CATEGORIES는 주제 분류용 세부 분류(10종). 발행 카테고리는 사이트 5종으로 매핑한다.
+TAXONOMY_TO_SITE = {
+    "포장자동화": "공장자동화",
+    "자동차자동화": "공장자동화",
+    "반도체자동화": "공장자동화",
+    "디스플레이자동화": "공장자동화",
+    "물류자동화": "물류자동화",
+    "로봇자동화": "공장자동화",
+    "부품정보": "공장자동화",
+    "PLC제어": "제어SW",
+    "비전검사": "딥러닝비전",
+    "스마트팩토리": "스마트팩토리",
+}
+assert set(TAXONOMY_TO_SITE) == {cat["name"] for cat in BLOG_CATEGORIES}
+assert set(TAXONOMY_TO_SITE.values()) <= set(SITE_CATEGORIES)
+
+# 모델이 사이트 카테고리 대신 쓰기 쉬운 표현 → 사이트 카테고리 (앞에서부터 우선)
+_CATEGORY_ALIASES = [
+    ("딥러닝", "딥러닝비전"), ("비전", "딥러닝비전"), ("머신비전", "딥러닝비전"),
+    ("제어", "제어SW"), ("plc", "제어SW"),
+    ("물류", "물류자동화"),
+    ("공장", "공장자동화"), ("로봇", "공장자동화"),
+    ("스마트", "스마트팩토리"),
+]
+
+ALLOWED_CATEGORIES = list(SITE_CATEGORIES)
 CATEGORY_KEYWORDS = {cat["name"]: cat["keywords"] for cat in BLOG_CATEGORIES}
 
 
 def classify_category(keyword: str, angle: str) -> str:
+    """주제 키워드로 사이트 카테고리 추정 (세부 분류 키워드 매칭 후 사이트 5종으로 매핑)."""
     text = f"{keyword} {angle}".lower()
     for cat in BLOG_CATEGORIES:
         for kw in cat["keywords"]:
             if kw.lower() in text:
-                return cat["name"]
-    return "스마트팩토리"
+                return TAXONOMY_TO_SITE[cat["name"]]
+    return DEFAULT_CATEGORY
 
 
-def validate_category(category: str) -> str:
-    if category in ALLOWED_CATEGORIES:
-        return category
-    for allowed in ALLOWED_CATEGORIES:
-        if allowed in category or category in allowed:
-            return allowed
-    return "스마트팩토리"
+def validate_category(category: str, fallback: str = DEFAULT_CATEGORY) -> str:
+    """모델이 돌려준 카테고리를 사이트 5종 중 하나로 정규화."""
+    raw = (category or "").strip()
+    if raw in SITE_CATEGORIES:
+        return raw
+    if raw in TAXONOMY_TO_SITE:
+        return TAXONOMY_TO_SITE[raw]
+    first = re.split(r"[/,·]", raw)[0].strip()  # "공장자동화/스마트팩토리" 등
+    if first in SITE_CATEGORIES:
+        return first
+    if first in TAXONOMY_TO_SITE:
+        return TAXONOMY_TO_SITE[first]
+    low = raw.lower()
+    for alias, site in _CATEGORY_ALIASES:
+        if alias in low:
+            return site
+    return fallback if fallback in SITE_CATEGORIES else DEFAULT_CATEGORY
 
 
 def is_valid_topic(topic: str) -> bool:
@@ -264,7 +276,7 @@ def generate_post(topic: dict) -> dict:
         }
 
     raw_cat = post.get("category", "")
-    validated_cat = validate_category(raw_cat)
+    validated_cat = validate_category(raw_cat, fallback=pre_category)
     if raw_cat != validated_cat:
         logger.warning(f"카테고리 보정: '{raw_cat}' -> '{validated_cat}'")
     post["category"] = validated_cat
@@ -331,11 +343,13 @@ def run_writer_agent(topics: list[dict]) -> list[dict]:
             draft_path = save_draft(post)
             post["draft_path"] = draft_path
             posts.append(post)
+        except GeminiGenerationError:
+            raise
         except Exception as e:
-            logger.error(f"'{topic['keyword']}' 작성 실패: {e}")
+            logger.error(f"'{topic['keyword']}' 작성 실패: {type(e).__name__}")
             posts.append({
                 "title": topic["keyword"],
-                "error": str(e),
+                "error": type(e).__name__,
                 "draft_path": None,
             })
 

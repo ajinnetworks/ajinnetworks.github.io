@@ -3,10 +3,9 @@
 # ================================
 
 agent:
-  model: "gemini-2.0-flash"
-  fallback_models:
-    - "gemini-2.0-flash-lite"
-    - "gemini-flash-latest"
+  # 모델은 코드에서 읽지 않음: GitHub Actions가 실행 시 사용 가능한 Gemini 모델을 탐색해
+  # GEMINI_MODELS 환경변수로 넘긴다 (Actions 변수 vars.GEMINI_MODELS로 고정 가능).
+  # Gemini 후보가 모두 실패하면 agents/gemini_client.py가 Anthropic(Sonnet)으로 대체한다.
   max_retries: 3
   retry_wait_seconds: 60
   max_tokens: 4000
@@ -38,6 +37,27 @@ trend:
     - "reddit_korea"           # Reddit 한국 커뮤니티
   keywords_per_run: 10         # 후보 키워드 수집 수
   top_select: 3                # 최종 선정 키워드 수
+  # 트렌드에 자동화 관련 키워드가 부족할 때 채우는 상시 주제 (B2B 도입 검토형)
+  # 최근 발행 60편 제목과 겹치는 주제는 자동 제외, 날짜 기준으로 순서를 섞는다.
+  evergreen_topics:
+    - "협동로봇 팔레타이징 도입 체크리스트"
+    - "딥러닝 비전검사 오검출 줄이는 방법"
+    - "AMR 도입 전 물류 동선 분석"
+    - "PLC 통신 프로토콜 선택 가이드"
+    - "AOI 검사 장비 선정 기준"
+    - "컨베이어 라인 택트타임 계산"
+    - "자동창고 AS/RS 도입 비용과 ROI"
+    - "포장 라인 라벨링 자동화"
+    - "2차전지 배터리 셀 외관 검사 자동화"
+    - "반도체 후공정 트레이 핸들링 자동화"
+    - "스마트팩토리 MES 구축 단계"
+    - "설비 예지보전 센서 선정"
+    - "로봇 그리퍼 EOAT 설계 포인트"
+    - "머신비전 조명 선택 가이드"
+    - "서보모터 사이징 계산 방법"
+    - "물류센터 소터 방식 비교"
+    - "중소 제조업 스마트공장 지원사업 활용"
+    - "공정 자동화 견적 요청 시 준비할 자료"
 
 writer:
   min_words: 800
