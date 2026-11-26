@@ -119,3 +119,17 @@ class TestRunReviewer:
         assert by_title["fixable"]["review_result"]["pass"] is True
         assert by_title["hopeless"]["review_result"]["pass"] is False  # 발행 단계에서 제외됨
         assert "forced_pass" not in by_title["hopeless"]["review_result"]
+
+
+class TestMalformedResults:
+    """Codex 리뷰(#19): issues가 null이면 TypeError."""
+
+    def test_null_or_non_list_issues(self):
+        for issues in (None, "문제 없음", {"a": 1}):
+            r = ra._review_from_result({"index": 1, "score": 90, "issues": issues}, 80)
+            assert r["pass"] is True and r["issues"] == []
+
+    def test_non_object_result_fails_closed(self):
+        assert ra._review_from_result([1, 2], 80)["pass"] is False
+        with patch.object(ra, "get_gemini_response", return_value="[1, 2]"):
+            assert ra.review_post(make_post())["pass"] is False

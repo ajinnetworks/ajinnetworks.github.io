@@ -67,13 +67,16 @@ def _extract_json(raw: str, opener: str) -> str:
 
 
 def _review_from_result(r: dict, min_score: int) -> dict:
+    if not isinstance(r, dict):
+        return _failed_review(min_score, f"검수 결과 형식 오류: {type(r).__name__}")
     try:
         score = int(r.get("score", 0))
     except (TypeError, ValueError):
         score = 0
     issues = [
         {"severity": str(i.get("severity", "medium")), "description": str(i.get("description", ""))}
-        for i in r.get("issues", []) if isinstance(i, dict) and i.get("description")
+        for i in (r.get("issues") if isinstance(r.get("issues"), list) else [])
+        if isinstance(i, dict) and i.get("description")
     ]
     passed = score >= min_score and not any(i["severity"] == "critical" for i in issues)
     if not passed and not issues and r.get("reason"):
