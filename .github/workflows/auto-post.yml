@@ -61,11 +61,39 @@ jobs:
 
       - name: 대표 그림 분포 점검 (한 그림 20% 초과 시 경고)
         # 발행은 GitHub API로 커밋되므로 최신 main을 받아 새 글까지 포함해 점검. 경고만 하고 실패시키지 않음
+        id: hero_check
         if: success()
         continue-on-error: true
         run: |
           git pull --ff-only --quiet origin "${{ github.ref_name }}" || echo "::notice::최신 main을 받지 못해 체크아웃 시점 기준으로 점검합니다"
-          python scripts/assign_hero_images.py --check --max-share 0.2
+          python scripts/assign_hero_images.py --check --max-share 0.2 --request-file config/hero-split-request.md
+
+      - name: 일러스트 추가 요청 PR 초안 (기준 초과 시)
+        # 전용 브랜치에 요청서(근거)만 올려 초안 PR을 만든다. 이미 열려 있으면 브랜치만 갱신. main에는 쓰지 않음
+        if: success() && steps.hero_check.outputs.over == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.BLOG_GITHUB_TOKEN }}
+          OVER_IMAGES: ${{ steps.hero_check.outputs.over_images }}
+          BASE: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          BR=auto/hero-split-request
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$BR"
+          git add config/hero-split-request.md
+          git commit -q -m "chore(hero): illustration split request — ${OVER_IMAGES}"
+          git -c http.https://github.com/.extraheader= push -q --force "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" "HEAD:refs/heads/${BR}"
+          OPEN=$(gh pr list --repo "$REPO" --head "$BR" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$OPEN" ]; then
+            gh pr edit "$OPEN" --repo "$REPO" --body-file config/hero-split-request.md
+            echo "::notice::기존 초안 PR #${OPEN} 갱신"
+          else
+            gh pr create --repo "$REPO" --draft --base "$BASE" --head "$BR" \
+              --title "[초안] 대표 그림 반복 해소: ${OVER_IMAGES} 일러스트 추가 필요" \
+              --body-file config/hero-split-request.md
+          fi
 
       - name: 실행 로그 업로드
         if: always()

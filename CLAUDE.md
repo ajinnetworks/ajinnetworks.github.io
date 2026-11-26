@@ -187,6 +187,7 @@ Shorts: https://www.youtube.com/@AjinSoftRock/shorts
 - 수동 고정: 글 머리말에 `image_lock: true` → 일괄 재배정에서 제외
 - `og_image`가 있는 글은 건드리지 않음. SNS·JSON-LD는 같은 이름의 PNG 사용
 - 분포 점검: `--check` (기본 20%). `auto-post.yml`이 발행 후 실행 → 넘으면 Actions 경고·실행 요약에 표시 (실패 처리 안 함)
+- 기준 초과 시 `auto/hero-split-request` 브랜치에 요청서(`config/hero-split-request.md`: 해당 글·세부 주제 후보)를 올려 **초안 PR** 생성/갱신. 그림 제작·규칙 수정은 사람이나 Claude 세션이 함 (초안 PR은 자동 병합 대상 아님)
 
 ---
 
