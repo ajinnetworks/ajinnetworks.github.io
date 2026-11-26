@@ -134,3 +134,27 @@ class TestModelSelection:
         monkeypatch.delenv("GEMINI_MODELS", raising=False)
         with patch.object(gemini_client, "discover_models", return_value=("x-1", "x-2")):
             assert gemini_client.configured_models("k") == ["x-1", "x-2"]
+
+
+class TestModelTagPrefix:
+    """2026-11-26 실제 발행(run #117): 모델이 '[evergreen] 키워드'로 답해 3개 모두 후보 밖으로 제거됨."""
+
+    def _run(self, model_keywords, candidates, top_n=3):
+        reply = json.dumps({"selected_topics": [
+            {"keyword": k, "angle": f"angle-{i}", "reason": "r", "estimated_search_volume": "high"}
+            for i, k in enumerate(model_keywords)
+        ]}, ensure_ascii=False)
+        with patch("agents.trend_agent.get_gemini_response", return_value=reply) as m:
+            out = select_topics_via_gemini(candidates, "스마트팩토리", top_n)
+        return out, m.call_args[0][0]
+
+    def test_source_tag_prefix_accepted_and_model_angle_kept(self):
+        cands = [{"keyword": k, "source": "evergreen"} for k in EVERGREEN[:4]]
+        out, _ = self._run([f"[evergreen] {EVERGREEN[2]}", f"[google_trends] {EVERGREEN[0]}"], cands, top_n=2)
+        assert [t["keyword"] for t in out] == [EVERGREEN[2], EVERGREEN[0]]
+        assert [t["angle"] for t in out] == ["angle-0", "angle-1"]  # 보충값이 아닌 모델 각도 유지
+
+    def test_prompt_does_not_show_source_tags(self):
+        cands = [{"keyword": EVERGREEN[0], "source": "evergreen"}]
+        _, prompt = self._run([EVERGREEN[0]], cands, top_n=1)
+        assert "[evergreen]" not in prompt and f"- {EVERGREEN[0]}" in prompt

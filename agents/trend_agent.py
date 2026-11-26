@@ -50,6 +50,11 @@ DOMAIN_TERMS = sorted(
 )
 
 
+def _strip_tag(text: str) -> str:
+    """모델이 붙이는 선행 태그 제거: '[evergreen] 키워드' -> '키워드'."""
+    return re.sub(r"^\s*(\[[^\]]*\]\s*)+", "", text or "")
+
+
 def _norm(text: str) -> str:
     return re.sub(r"\s+", "", text or "").lower()
 
@@ -219,7 +224,7 @@ def select_topics_via_gemini(
     Manager AI 역할: 전략적 주제 선정.
     """
     trends_text = "\n".join(
-        [f"- [{t['source']}] {t['keyword']}" for t in raw_trends[:50]]
+        [f"- {t['keyword']}" for t in raw_trends[:50]]
     )
 
     prompt = f"""
@@ -266,7 +271,7 @@ def select_topics_via_gemini(
     allowed = {_norm(t["keyword"]): t["keyword"] for t in raw_trends}
     selected = []
     for topic in result.get("selected_topics", []):
-        key = _norm(topic.get("keyword", ""))
+        key = _norm(_strip_tag(topic.get("keyword", "")))
         if key in allowed and key not in {_norm(s["keyword"]) for s in selected}:
             topic["keyword"] = allowed[key]
             selected.append(topic)
