@@ -60,6 +60,7 @@ layout: default
     {% assign hero_icon  = '🤖' %}
     {% assign hero_sub   = 'Deep Learning Vision' %}
     {% assign hero_pattern = 'vision' %}
+    {% assign hero_accent_hc = '#e39bff' %}
   {% when '스마트팩토리' %}
     {% assign hero_bg    = '#1a1200' %}
     {% assign hero_accent= '#ffb300' %}
@@ -72,6 +73,7 @@ layout: default
     {% assign hero_icon  = '💻' %}
     {% assign hero_sub   = 'Control Software' %}
     {% assign hero_pattern = 'control' %}
+    {% assign hero_accent_hc = '#9cbcff' %}
   {% else %}
     {% assign hero_bg    = '#111111' %}
     {% assign hero_accent= '#ffffff' %}
@@ -90,6 +92,9 @@ layout: default
     --hero-bg:     {{ hero_bg }};
     --hero-accent: {{ hero_accent }};
   }
+  {% if hero_accent_hc %}
+  [data-theme="high-contrast"] { --hero-accent: {{ hero_accent_hc }}; }
+  {% endif %}
 
   /* ── 히어로 배너 ── */
   .post-hero {
@@ -132,8 +137,8 @@ layout: default
     position: absolute;
     inset: 0;
     background-image:
-      linear-gradient(var(--hero-accent)18 1px, transparent 1px),
-      linear-gradient(90deg, var(--hero-accent)18 1px, transparent 1px);
+      linear-gradient(color-mix(in srgb, var(--hero-accent) 9.4%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--hero-accent) 9.4%, transparent) 1px, transparent 1px);
     background-size: 40px 40px;
     animation: gridMove 20s linear infinite;
   }
@@ -144,7 +149,7 @@ layout: default
     position: absolute;
     width: 500px;
     height: 500px;
-    background: radial-gradient(circle, var(--hero-accent)22 0%, transparent 70%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--hero-accent) 13.3%, transparent) 0%, transparent 70%);
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -161,8 +166,8 @@ layout: default
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: var(--hero-accent)22;
-    border: 1px solid var(--hero-accent)66;
+    background: color-mix(in srgb, var(--hero-accent) 13.3%, transparent);
+    border: 1px solid color-mix(in srgb, var(--hero-accent) 40%, transparent);
     color: var(--hero-accent);
     font-size: 0.78rem;
     font-weight: 700;
@@ -177,13 +182,14 @@ layout: default
   .hero-icon { font-size: 1.1rem; }
 
   /* 메인 타이틀 */
-  .hero-title {
+  .post-hero .hero-title {
     font-size: clamp(1.1rem, 3.8vw, 1.8rem);
     font-weight: 800;
     color: #ffffff;
+    letter-spacing: -0.5px;
     line-height: 1.4;
     margin: 0 0 16px;
-    text-shadow: 0 0 40px var(--hero-accent)44;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.8), 0 0 40px color-mix(in srgb, var(--hero-accent) 26.7%, transparent);
     width: 100%;
     max-width: 100%;
     white-space: normal;
@@ -256,6 +262,9 @@ layout: default
   .cat-tab[data-cat="딥러닝비전"].active  { color:#bf00ff; }
   .cat-tab[data-cat="스마트팩토리"].active{ color:#ffb300; }
   .cat-tab[data-cat="제어SW"].active      { color:#4488ff; }
+  [data-theme="high-contrast"] .cat-tab[data-cat="딥러닝비전"].active { color:#e39bff; }
+  [data-theme="high-contrast"] .cat-tab[data-cat="제어SW"].active     { color:#9cbcff; }
+  [data-theme="high-contrast"] .cat-tab { color: rgba(255,255,255,0.75); }
 
   /* 768px 이하: 탭 크기 조정 */
   @media (max-width: 768px) {
@@ -422,6 +431,13 @@ layout: default
   }
   .post-tag:hover { border-color: var(--hero-accent); color: var(--hero-accent); }
 
+  /* ── 고대비 테마 ── */
+  [data-theme="high-contrast"] .post-body-wrap :not(pre) > code { color: #8a1450; border-color: #767c85; }
+  [data-theme="high-contrast"] .post-body-wrap th,
+  [data-theme="high-contrast"] .post-body-wrap td,
+  [data-theme="high-contrast"] .post-tags { border-color: #767c85; }
+  [data-theme="high-contrast"] .post-tag { border-color: #767c85; color: #3c4043; }
+
 </style>
 
 <!-- 카테고리 탭 네비게이션 -->
@@ -457,7 +473,7 @@ layout: default
       <span class="hero-icon">{{ hero_icon }}</span>
       {{ cat }} · {{ hero_sub }}
     </div>
-    <h1 class="hero-title" style="color:#ffffff !important; text-shadow: 0 2px 20px rgba(0,0,0,0.8);">{{ page.title }}</h1>
+    <h1 class="hero-title">{{ page.title }}</h1>
     <div class="hero-meta">
       <span>📅 {{ page.date | date: "%Y년 %m월 %d일" }}</span>
       <span>·</span>
