@@ -15,6 +15,7 @@
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
+  try { if (localStorage.getItem('ajin-contrast') === 'high') gtag('set', 'user_properties', { contrast_mode: 'high' }); } catch (e) {}
   gtag('config', 'G-RYPE4V64TJ');
 </script>
 
@@ -205,6 +206,15 @@ function toggleContrast() {
   if (on) { root.setAttribute('data-theme', 'high-contrast'); } else { root.removeAttribute('data-theme'); }
   try { localStorage.setItem('ajin-contrast', on ? 'high' : 'default'); } catch (e) {}
   syncContrastButton();
+  // GA4: 고대비 전환 사용률 측정 (conversion-tracking.js와 같은 파라미터 규칙)
+  if (typeof window.gtag === 'function') {
+    window.gtag('event', 'contrast_toggle', {
+      contrast_mode: on ? 'high' : 'default',
+      page_path: location.pathname,
+      page_title: document.title
+    });
+    window.gtag('set', 'user_properties', { contrast_mode: on ? 'high' : 'default' });
+  }
 }
 // 모바일 메뉴
 function toggleMobileMenu() {
