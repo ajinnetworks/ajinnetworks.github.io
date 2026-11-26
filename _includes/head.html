@@ -3,6 +3,10 @@
 <meta name="naver-site-verification" content="22f83a2226c6898ed33008d93206bfb17fe7e370" />
 <link rel="icon" type="image/png" href="{{ "/assets/images/favicon.png" | relative_url }}">
 <meta charset="utf-8">
+<script>
+  // 고대비 테마: 렌더 전에 적용해 깜빡임 방지
+  try { if (localStorage.getItem('ajin-contrast') === 'high') document.documentElement.setAttribute('data-theme', 'high-contrast'); } catch (e) {}
+</script>
 <link rel="canonical" href="{{ page.url | prepend: site.url }}" />
 
 <!-- Google Analytics GA4 -->
@@ -11,6 +15,7 @@
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
+  try { if (localStorage.getItem('ajin-contrast') === 'high') gtag('set', 'user_properties', { contrast_mode: 'high' }); } catch (e) {}
   gtag('config', 'G-RYPE4V64TJ');
 </script>
 
@@ -189,6 +194,28 @@ function copyURL() {
   });
 }
 
+// 고대비 테마 전환
+function syncContrastButton() {
+  var on = document.documentElement.getAttribute('data-theme') === 'high-contrast';
+  var btn = document.querySelector('.nav-contrast-btn');
+  if (btn) btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+}
+function toggleContrast() {
+  var root = document.documentElement;
+  var on = root.getAttribute('data-theme') !== 'high-contrast';
+  if (on) { root.setAttribute('data-theme', 'high-contrast'); } else { root.removeAttribute('data-theme'); }
+  try { localStorage.setItem('ajin-contrast', on ? 'high' : 'default'); } catch (e) {}
+  syncContrastButton();
+  // GA4: 고대비 전환 사용률 측정 (conversion-tracking.js와 같은 파라미터 규칙)
+  if (typeof window.gtag === 'function') {
+    window.gtag('event', 'contrast_toggle', {
+      contrast_mode: on ? 'high' : 'default',
+      page_path: location.pathname,
+      page_title: document.title
+    });
+    window.gtag('set', 'user_properties', { contrast_mode: on ? 'high' : 'default' });
+  }
+}
 // 모바일 메뉴
 function toggleMobileMenu() {
   var nav = document.querySelector('.nav-links');
@@ -209,6 +236,7 @@ document.addEventListener('click', function(e) {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
+  syncContrastButton();
   if (typeof calcReadingTime === 'function') calcReadingTime();
   if (typeof buildTOC === 'function') buildTOC();
   if (typeof initSearch === 'function') initSearch();
