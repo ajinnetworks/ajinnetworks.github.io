@@ -481,6 +481,13 @@ layout: default
     </div>
   </div>
 </header>
+{%- comment -%}
+  글에 고유 대표 이미지(image/og_image)가 있으면 default.html이 그 이미지를 히어로로 쓰므로 카테고리 사진으로 덮어쓰지 않는다.
+  _config.yml defaults가 모든 글에 image: /assets/img/og-default.png를 넣으므로, 그 값은 "고유 이미지 없음"으로 본다.
+{%- endcomment -%}
+{%- assign explicit_hero = page.og_image | default: page.image -%}
+{%- if explicit_hero == "/assets/img/og-default.png" -%}{%- assign explicit_hero = nil -%}{%- endif -%}
+{%- unless explicit_hero -%}
 <script>
 (function() {
   var pattern = "{{ hero_pattern }}";
@@ -494,6 +501,7 @@ layout: default
   }
 })();
 </script>
+{%- endunless -%}
 
 <!-- 본문 -->
 <article class="post-body-wrap">

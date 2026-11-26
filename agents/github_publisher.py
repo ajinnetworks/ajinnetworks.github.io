@@ -75,6 +75,7 @@ def get_github_config() -> dict:
 # 본문 외부 이미지는 제거하고, 대표 이미지는 저장소의 공정별 일러스트(assets/img/hero-v2)로 지정한다.
 HERO_DIR = "/assets/img/hero-v2"
 HERO_KEYWORDS = [  # (제목·키워드에 포함되면, 일러스트) — 위에서부터 우선
+    (("택트", "사이클타임", "라인 밸런싱", "병목"), "smart-oee"),
     (("팔레타이징", "적재"), "palletizing"),
     (("포장", "라벨", "케이스 패커", "테이핑"), "packaging-line"),
     (("자동창고", "AS/RS", "ASRS", "스태커"), "logistics-asrs"),

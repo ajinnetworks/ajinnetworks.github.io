@@ -44,3 +44,16 @@ def test_writer_prompt_no_longer_requests_unsplash():
 
 def test_no_post_points_at_missing_heroes_v2():
     assert not [f for f in glob.glob("_posts/*.md") if "/assets/images/heroes-v2/" in open(f, encoding="utf-8").read()]
+
+
+def test_line_productivity_topics_use_oee_illustration():
+    assert pick_hero_image("컨베이어 라인 택트타임 계산 방법", "물류자동화") == f"{HERO_DIR}/smart-oee.svg"
+
+
+def test_post_layout_respects_explicit_image():
+    """Codex 리뷰(#20): post.html 스크립트가 page.image를 카테고리 사진으로 덮어쓰던 문제."""
+    layout = Path("_layouts/post.html").read_text(encoding="utf-8")
+    script_at = layout.index("heroEl.style.setProperty")
+    guard_at = layout.index("{%- unless explicit_hero -%}")
+    assert guard_at < script_at < layout.index("{%- endunless -%}", script_at)
+    assert '"/assets/img/og-default.png"' in layout  # 사이트 기본값은 고유 이미지로 보지 않음
