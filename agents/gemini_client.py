@@ -99,13 +99,30 @@ def configured_models(api_key: str) -> list[str]:
     return models or list(discover_models(api_key))
 
 
-def get_gemini_response(prompt: str) -> str:
+def order_models(models: list[str], prefer: str = "default") -> list[str]:
+    """prefer="quality": lite 계열을 뒤로 보내고 flash → pro → 나머지 순 (검수처럼 정확도가 중요한 호출용)."""
+    if prefer != "quality":
+        return list(models)
+
+    def rank(name: str) -> int:
+        if "lite" in name:
+            return 3
+        if "flash" in name:
+            return 0
+        if "pro" in name:
+            return 1
+        return 2
+
+    return sorted(models, key=rank)  # 같은 순위 안에서는 기존 순서 유지 (stable sort)
+
+
+def get_gemini_response(prompt: str, prefer: str = "default") -> str:
     if getattr(get_gemini_response, "_use_anthropic", False):
         return _anthropic_response(prompt)
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
     if not api_key:
         raise GeminiGenerationError("GEMINI_API_KEY is required")
-    models = configured_models(api_key)
+    models = order_models(configured_models(api_key), prefer)
 
     client = genai.Client(
         api_key=api_key,
