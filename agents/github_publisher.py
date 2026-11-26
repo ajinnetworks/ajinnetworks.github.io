@@ -13,6 +13,7 @@ import logging
 import os
 import re
 import sys
+import zlib
 
 if sys.stdout.encoding != 'utf-8':
     sys.stdout = io.TextIOWrapper(
@@ -69,6 +70,47 @@ def get_github_config() -> dict:
 
 # ─── 마크다운 변환 ────────────────────────────────────────────────────────────
 
+# ── 대표 이미지 ──────────────────────────────────────────────
+# 작성 모델이 본문에 넣던 Unsplash 사진은 프롬프트에 고정된 5장이 반복돼 277편에 같은 사진이 쓰였다.
+# 본문 외부 이미지는 제거하고, 대표 이미지는 저장소의 공정별 일러스트(assets/img/hero-v2)로 지정한다.
+HERO_DIR = "/assets/img/hero-v2"
+HERO_KEYWORDS = [  # (제목·키워드에 포함되면, 일러스트) — 위에서부터 우선
+    (("팔레타이징", "적재"), "palletizing"),
+    (("포장", "라벨", "케이스 패커", "테이핑"), "packaging-line"),
+    (("자동창고", "AS/RS", "ASRS", "스태커"), "logistics-asrs"),
+    (("AMR", "AGV", "자율이동", "무인운반"), "logistics-amr"),
+    (("그리퍼", "EOAT", "엔드이펙터", "로봇"), "robot-eoat"),
+    (("PLC", "HMI", "SCADA", "EtherCAT", "PROFINET", "제어"), "plc-control"),
+    (("비전", "AOI", "검사"), "vision-inspection"),
+    (("OEE", "MES", "예지보전", "모니터링"), "smart-oee"),
+]
+CATEGORY_HEROES = {
+    "딥러닝비전": ["vision-inspection"],
+    "물류자동화": ["logistics-amr", "logistics-asrs"],
+    "공장자동화": ["robot-eoat", "palletizing", "packaging-line"],
+    "제어SW": ["plc-control"],
+    "스마트팩토리": ["smart-oee", "robot-eoat"],
+}
+_EXTERNAL_IMAGE = re.compile(r"!\[[^\]]*\]\(https?://[^)\s]+[^)]*\)")
+
+
+def strip_external_images(content: str) -> str:
+    """본문의 외부 URL 마크다운 이미지를 제거하고, 남는 빈 줄을 정리한다."""
+    cleaned = _EXTERNAL_IMAGE.sub("", content)
+    return re.sub(r"\n{3,}", "\n\n", cleaned).strip() + "\n"
+
+
+def pick_hero_image(title: str, category: str, keywords=None) -> str:
+    """제목·키워드에 맞는 공정 일러스트, 없으면 카테고리 일러스트 (같은 제목은 항상 같은 결과)."""
+    text = " ".join([title or ""] + [str(k) for k in (keywords or [])]).upper()
+    for terms, name in HERO_KEYWORDS:
+        if any(t.upper() in text for t in terms):
+            return f"{HERO_DIR}/{name}.svg"
+    options = CATEGORY_HEROES.get(category) or CATEGORY_HEROES["스마트팩토리"]
+    name = options[zlib.crc32((title or "").encode("utf-8")) % len(options)]
+    return f"{HERO_DIR}/{name}.svg"
+
+
 def make_slug(title: str) -> str:
     """
     포스트 제목을 Jekyll URL-safe 슬러그로 변환.
@@ -107,6 +149,8 @@ def post_to_jekyll_markdown(post: dict) -> tuple[str, str]:
     else:
         safe_content = str(raw_content) if raw_content else ""
     safe_content = safe_content.encode("utf-8", errors="ignore").decode("utf-8")
+    safe_content = strip_external_images(safe_content)
+    categories = _parse_category(post.get("category", "기술"))
 
     # Front Matter 구성
     meta = frontmatter.Post(
@@ -114,7 +158,7 @@ def post_to_jekyll_markdown(post: dict) -> tuple[str, str]:
         layout="post",
         title=title,
         date=datetime_str,
-        categories=_parse_category(post.get("category", "기술")),
+        categories=categories,
         tags=post.get("tags", [])[:10],
         description=post.get("meta_description", "")[:160],
         keywords=post.get("seo_keywords", []),
@@ -122,6 +166,9 @@ def post_to_jekyll_markdown(post: dict) -> tuple[str, str]:
         # 검수 점수 메타로 기록 (독자에게 비표시)
         review_score=post.get("review_result", {}).get("total_score", 0),
         generated_at=post.get("generated_at", now.isoformat()),
+        image=pick_hero_image(title, categories[0] if categories else "", post.get("seo_keywords")),
+        image_alt=f"{title} — {categories[0] if categories else '자동화'} 공정 일러스트",
+        image_strategy="process-hero-v3",
     )
 
     # python-frontmatter 로 직렬화
