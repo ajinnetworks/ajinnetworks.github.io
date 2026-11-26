@@ -94,3 +94,43 @@ class TestSelectionGuard:
         cands = [{"keyword": "AMR 도입 전 물류 동선 분석", "source": "evergreen"}]
         out = self._run(["AMR도입 전 물류동선 분석"], cands, top_n=1)
         assert out[0]["keyword"] == "AMR 도입 전 물류 동선 분석"
+
+
+class TestEvergreenExhaustion:
+    def test_all_evergreen_recently_used_reuses_oldest_first(self):
+        # 최신순 제목: 0번이 가장 최근. 모든 상시 주제가 최근에 쓰인 상태
+        recent = [f"{kw} 실무 가이드" for kw in EVERGREEN]
+        c = build_candidates(trends("k-라면"), EVERGREEN, 3, recent, date(2026, 11, 26))
+        assert len(c) == 6  # 발행이 멈추지 않음
+        assert all(x["source"] == "evergreen_reuse" for x in c)
+        # 가장 오래전에 쓴 것(목록 끝)부터
+        assert [x["keyword"] for x in c] == list(reversed(EVERGREEN))[:6]
+
+    def test_fresh_topics_preferred_over_reuse(self):
+        recent = [f"{kw} 가이드" for kw in EVERGREEN[:5]]
+        c = build_candidates([], EVERGREEN, 3, recent, date(2026, 11, 26))
+        sources = [x["source"] for x in c]
+        assert sources[:2] == ["evergreen", "evergreen"]  # 남은 신규 2개 먼저
+        assert sources[2:] == ["evergreen_reuse"] * 4
+
+
+class TestModelSelection:
+    def test_pick_models_latest_per_family_then_aliases(self):
+        from agents.gemini_client import pick_models
+        ids = ["gemini-2.5-pro", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite",
+               "gemini-3.8-flash", "gemini-3.6-flash", "gemini-flash-latest",
+               "gemini-3.8-flash-preview-09", "text-embedding-005"]
+        assert pick_models(ids) == ["gemini-3.5-flash-lite", "gemini-2.5-pro",
+                                    "gemini-3.8-flash", "gemini-flash-latest"]
+
+    def test_env_models_used_without_discovery(self, monkeypatch):
+        from agents import gemini_client
+        monkeypatch.setenv("GEMINI_MODELS", "m-a, m-b,m-a")
+        with patch.object(gemini_client, "discover_models", side_effect=AssertionError):
+            assert gemini_client.configured_models("k") == ["m-a", "m-b"]
+
+    def test_discovery_used_when_env_empty(self, monkeypatch):
+        from agents import gemini_client
+        monkeypatch.delenv("GEMINI_MODELS", raising=False)
+        with patch.object(gemini_client, "discover_models", return_value=("x-1", "x-2")):
+            assert gemini_client.configured_models("k") == ["x-1", "x-2"]

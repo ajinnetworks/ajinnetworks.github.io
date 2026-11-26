@@ -62,7 +62,7 @@ logger = logging.getLogger("run_agent")
 
 
 def validate_env(platform: str = "github") -> bool:
-    required = ["GEMINI_API_KEY", "GEMINI_MODELS"]
+    required = ["GEMINI_API_KEY"]  # GEMINI_MODELS는 선택: 없으면 실행 시 API에서 탐색
     if platform == "github":
         required += ["BLOG_REPO"]
     elif platform == "wordpress":

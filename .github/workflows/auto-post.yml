@@ -31,6 +31,7 @@ jobs:
       BLOG_REPO: ajinnetworks/ajinnetworks.github.io
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      # 비어 있으면 agents/gemini_client.py가 실행 시 모델을 탐색 (Actions 변수로 고정 가능)
       GEMINI_MODELS: ${{ vars.GEMINI_MODELS }}
       HUMAN_GATE: "false"
       PYTHONUTF8: "1"
@@ -51,47 +52,6 @@ jobs:
         run: |
           # 버전 고정: 미고정 설치로 google-genai가 바뀌며 호출 API가 v1beta→v1로 변한 전례가 있음 (2026-11)
           pip install anthropic==2.14.0 PyGithub==2.10.0 python-frontmatter==1.3.0 requests==2.34.2 PyYAML==6.0.4 python-dotenv==1.2.4 schedule==1.2.2 google-genai==3.6.1
-
-      - name: 사용 가능한 Gemini 모델 탐색
-        if: env.GEMINI_MODELS == ''
-        run: |
-          python - <<'PY'
-          import os
-          import re
-
-          from google import genai
-          from google.genai import errors
-
-          try:
-              with genai.Client(api_key=os.environ["GEMINI_API_KEY"]) as client:
-                  ids = [
-                      model.name.rsplit("/", 1)[-1]
-                      for model in client.models.list()
-                      if model.name and "generateContent" in (model.supported_actions or [])
-                  ]
-          except errors.APIError as error:
-              raise SystemExit(f"Gemini model discovery HTTP {error.code}") from None
-
-          candidates = []
-          for model_id in ids:
-              match = re.fullmatch(r"gemini-(\d+)\.(\d+)-(flash-lite|pro|flash)", model_id)
-              if match:
-                  major, minor = map(int, match.groups()[:2])
-                  candidates.append((major, minor, match[3], model_id))
-          models = []
-          for family in ("flash-lite", "pro", "flash"):
-              family_models = [item for item in candidates if item[2] == family]
-              if family_models:
-                  models.append(max(family_models)[-1])
-          for alias in ("gemini-flash-lite-latest", "gemini-pro-latest", "gemini-flash-latest"):
-              if alias in ids and len(models) < 4:
-                  models.append(alias)
-          if not models:
-              raise SystemExit("No supported stable Gemini Flash model found")
-          print("Gemini candidates:", ", ".join(models))
-          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env_file:
-              env_file.write("GEMINI_MODELS=" + ",".join(models) + "\n")
-          PY
 
       - name: 블로그 포스트 자동 생성 및 발행
         run: |

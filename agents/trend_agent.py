@@ -82,6 +82,12 @@ def _recently_used(keyword: str, recent_titles: list[str]) -> bool:
     return any(k and k in _norm(t) for t in recent_titles)
 
 
+def _last_used_rank(keyword: str, recent_titles: list[str]) -> int:
+    """recent_titles(최신순)에서 처음 등장한 위치. 클수록 오래전에 쓴 주제."""
+    k = _norm(keyword)
+    return next((i for i, t in enumerate(recent_titles) if k and k in _norm(t)), len(recent_titles))
+
+
 def build_candidates(
     raw_trends: list[dict],
     evergreen: list[str],
@@ -108,11 +114,22 @@ def build_candidates(
 
     want = max(top_n * 2, top_n + 3)
     if len(candidates) < want:
-        pool = [e for e in evergreen if _norm(e) not in seen and not _recently_used(e, recent_titles)]
-        random.Random((today or date.today()).toordinal()).shuffle(pool)
-        for kw in pool[: want - len(candidates)]:
+        fresh = [e for e in evergreen if _norm(e) not in seen and not _recently_used(e, recent_titles)]
+        random.Random((today or date.today()).toordinal()).shuffle(fresh)
+        # 상시 주제가 모두 최근에 쓰였으면 가장 오래전에 쓴 것부터 재사용 (발행이 멈추지 않게)
+        reused = sorted(
+            (e for e in evergreen if _norm(e) not in seen and _recently_used(e, recent_titles)),
+            key=lambda e: _last_used_rank(e, recent_titles), reverse=True,
+        )
+        for kw, source in [(k, "evergreen") for k in fresh] + [(k, "evergreen_reuse") for k in reused]:
+            if len(candidates) >= want:
+                break
+            if _norm(kw) in seen:
+                continue
             seen.add(_norm(kw))
-            candidates.append({"keyword": kw, "source": "evergreen"})
+            candidates.append({"keyword": kw, "source": source})
+        if any(c["source"] == "evergreen_reuse" for c in candidates):
+            logger.warning("상시 주제가 부족해 오래전에 쓴 주제를 재사용합니다: config trend.evergreen_topics 보강 권장")
     return candidates
 
 
@@ -303,7 +320,7 @@ def run_trend_agent(blog_domain: Optional[str] = None) -> list[dict]:
         top_n=top_n,
         recent_titles=load_recent_titles(),
     )
-    from_trends = sum(1 for c in candidates if c["source"] != "evergreen")
+    from_trends = sum(1 for c in candidates if not c["source"].startswith("evergreen"))
     logger.info(
         f"트렌드 {len(all_trends)}개 중 도메인 관련 {from_trends}개 + 상시 주제 "
         f"{len(candidates) - from_trends}개 → 후보 {len(candidates)}개 Gemini 전달"

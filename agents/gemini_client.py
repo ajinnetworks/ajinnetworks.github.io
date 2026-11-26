@@ -2,6 +2,7 @@
 from functools import lru_cache
 import logging
 import os
+import re
 import time
 
 from google import genai
@@ -47,16 +48,64 @@ def _anthropic_response(prompt: str) -> str:
     return text
 
 
-def get_gemini_response(prompt: str) -> str:
-    if getattr(get_gemini_response, "_use_anthropic", False):
-        return _anthropic_response(prompt)
-    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+_MODEL_ID = re.compile(r"gemini-(\d+)\.(\d+)-(flash-lite|pro|flash)")
+_ALIASES = ("gemini-flash-lite-latest", "gemini-pro-latest", "gemini-flash-latest")
+
+
+def pick_models(model_ids: list[str]) -> list[str]:
+    """generateContent 지원 모델 ID 목록에서 후보 선택: 계열(flash-lite, pro, flash)별 최신 버전 + 별칭(최대 4개)."""
+    candidates = []
+    for model_id in model_ids:
+        match = _MODEL_ID.fullmatch(model_id)
+        if match:
+            major, minor = int(match[1]), int(match[2])
+            candidates.append((major, minor, match[3], model_id))
+    models = []
+    for family in ("flash-lite", "pro", "flash"):
+        family_models = [item for item in candidates if item[2] == family]
+        if family_models:
+            models.append(max(family_models)[-1])
+    for alias in _ALIASES:
+        if alias in model_ids and len(models) < 4:
+            models.append(alias)
+    return models
+
+
+@lru_cache(maxsize=1)
+def discover_models(api_key: str) -> tuple[str, ...]:
+    """API에서 사용 가능한 Gemini 모델을 조회해 후보를 고른다 (프로세스당 1회)."""
+    try:
+        with genai.Client(api_key=api_key) as client:
+            ids = [
+                model.name.rsplit("/", 1)[-1]
+                for model in client.models.list()
+                if model.name and "generateContent" in (model.supported_actions or [])
+            ]
+    except errors.APIError as error:
+        raise GeminiGenerationError(f"Gemini model discovery HTTP {error.code}") from None
+    models = pick_models(ids)
+    if not models:
+        raise GeminiGenerationError("No supported stable Gemini model found")
+    logger.info("Gemini 모델 탐색: %s", ", ".join(models))
+    return tuple(models)
+
+
+def configured_models(api_key: str) -> list[str]:
+    """GEMINI_MODELS(쉼표 구분)가 있으면 그대로, 없으면 API에서 탐색."""
     models = list(dict.fromkeys(
         name.strip() for name in os.getenv("GEMINI_MODELS", "").split(",")
         if name.strip()
     ))
-    if not api_key or not models:
-        raise GeminiGenerationError("GEMINI_API_KEY and GEMINI_MODELS are required")
+    return models or list(discover_models(api_key))
+
+
+def get_gemini_response(prompt: str) -> str:
+    if getattr(get_gemini_response, "_use_anthropic", False):
+        return _anthropic_response(prompt)
+    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    if not api_key:
+        raise GeminiGenerationError("GEMINI_API_KEY is required")
+    models = configured_models(api_key)
 
     client = genai.Client(
         api_key=api_key,
